@@ -1,9 +1,12 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
 import { useState } from 'react';
-import Link from 'next/link';
+import { useForm } from 'react-hook-form';
+import { useRouter } from 'next/navigation';
 import { FaArrowLeft } from 'react-icons/fa';
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from '/firebase';
+import Link from 'next/link'; // ✅ Added this import
 
 export default function LoginPage() {
   const {
@@ -12,39 +15,39 @@ export default function LoginPage() {
     formState: { errors },
     setError,
   } = useForm();
-  
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Handle form submission
-  const onSubmit = (data) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
+
+  const onSubmit = async (data) => {
     setIsSubmitting(true);
 
-    // Simulate API call for authentication (replace with actual API)
-    setTimeout(() => {
-      if (data.email === 'test@example.com' && data.password === 'password123') {
-        // Simulating successful login
-        window.location.href = '/profile'; // Redirect to profile after successful login
+    try {
+      await signInWithEmailAndPassword(auth, data.email, data.password);
+      router.push('/dashboard');
+    } catch (error) {
+      console.error("Login Error: ", error);
+      if (error.code === 'auth/user-not-found') {
+        setError('email', { message: 'No user found with this email' });
+      } else if (error.code === 'auth/wrong-password') {
+        setError('password', { message: 'Incorrect password' });
       } else {
-        // Simulating failed login (invalid credentials)
-        setError('password', { message: 'Invalid email or password' });
-        setIsSubmitting(false);
+        setError('password', { message: 'An error occurred. Please try again.' });
       }
-    }, 2000);
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-[#f7f7f9] flex flex-col items-center justify-center p-8">
-      {/* Back Arrow outside the card */}
-      <Link href="/" className="absolute top-8 left-8 text-2xl text-gray-800 cursor-pointer hover:text-indigo-600 transition-all">
+    <div className="min-h-screen flex flex-col items-center justify-center p-6">
+      <Link href="/" className="absolute top-8 left-8 text-xl text-gray-800 hover:text-black">
         <FaArrowLeft />
       </Link>
 
-      {/* Login Form Card with white background, centered */}
       <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-3xl flex flex-col items-center">
         <h1 className="text-2xl font-semibold text-gray-800 mb-6">Login to Your Account</h1>
 
         <form onSubmit={handleSubmit(onSubmit)} className="w-full space-y-4">
-          {/* Email Field */}
           <div className="flex flex-col space-y-2">
             <label htmlFor="email" className="text-sm text-gray-600">Email</label>
             <input
@@ -62,7 +65,6 @@ export default function LoginPage() {
             {errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
           </div>
 
-          {/* Password Field */}
           <div className="flex flex-col space-y-2">
             <label htmlFor="password" className="text-sm text-gray-600">Password</label>
             <input
@@ -77,12 +79,6 @@ export default function LoginPage() {
             {errors.password && <p className="text-red-500 text-sm">{errors.password.message}</p>}
           </div>
 
-          {/* Error message for invalid credentials */}
-          {errors.password?.message && (
-            <p className="text-red-500 text-sm">{errors.password.message}</p>
-          )}
-
-          {/* Submit Button */}
           <button
             type="submit"
             disabled={isSubmitting}
@@ -93,11 +89,10 @@ export default function LoginPage() {
         </form>
 
         <div className="text-sm text-center mt-4">
-        <Link href="/forgetpassword" className="text-blue-600 hover:underline">
-  Forget your password?
-</Link>
-</div>
-
+          <Link href="/forgetpassword" className="text-blue-600 hover:underline">
+            Forget your password?
+          </Link>
+        </div>
 
         <div className="text-sm text-center mt-2">
           <span>Don't have an account?</span>

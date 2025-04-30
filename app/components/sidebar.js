@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { FaTachometerAlt, FaTasks, FaChartLine, FaUsers, FaBell, FaUserAlt, FaCog, FaSignOutAlt } from 'react-icons/fa'; // Make sure this import is correct
+import { FaTachometerAlt, FaTasks, FaChartLine, FaUsers, FaBell, FaUserAlt, FaCog, FaSignOutAlt } from 'react-icons/fa'; // Ensure icons are imported correctly
 
 const topLinks = [
   { href: '/', label: 'Dashboard', icon: <FaTachometerAlt /> },
@@ -21,11 +21,11 @@ const bottomLinks = [
 export default function Sidebar() {
   const pathname = usePathname();
 
-  // Check if the current page is login or signup
-  const isAuthPage = pathname === '/login' || pathname === '/signup' || pathname === '/forgetpassword';
+  // Check if the current page is login, signup, forgetpassword or the app root page
+  const isAuthPage = pathname === '/login' || pathname === '/app' || pathname === '/forgetpassword';
 
   if (isAuthPage) {
-    return null; // Do not render the sidebar on login or signup pages
+    return null; // Do not render the sidebar on login, signup or forgetpassword pages
   }
 
   return (

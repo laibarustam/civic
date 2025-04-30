@@ -1,134 +1,141 @@
-import ReportsGraph from './components/ReportsGraph';
-import { FaChartBar, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
+'use client';
+
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { useRouter } from 'next/navigation';
+import { FaUser, FaEnvelope, FaLock, FaPhone, FaArrowLeft } from 'react-icons/fa';
+import Link from 'next/link';
+import { createUserWithEmailAndPassword } from "firebase/auth"; 
+import { auth } from '/firebase'; 
 
 export default function Home() {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    watch,
+    setError,
+  } = useForm();
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
+
+  const onSubmit = async (data) => {
+    setIsSubmitting(true);
+
+    try {
+      await createUserWithEmailAndPassword(auth, data.email, data.password);
+      router.push('/dashboard');
+    } catch (error) {
+      if (error.code === 'auth/email-already-in-use') {
+        setError('email', { message: 'Email is already in use' });
+      } else if (error.code === 'auth/weak-password') {
+        setError('password', { message: 'Password is too weak' });
+      } else {
+        setError('password', { message: 'An error occurred. Please try again.' });
+      }
+      setIsSubmitting(false);
+    }
+  };
+
   return (
-    <div className="flex min-h-screen">
-      {/* Main Content */}
-      <main className="flex-1 bg-[#f9fafb] p-10 overflow-y-auto">
-        {/* Header */}
-        <h2 className="text-2xl font-semibold mb-2">Civic Connect - Admin Panel</h2>
-        <div className="flex items-center gap-4 mb-10">
-          {/* Image Section */}
-          <img 
-            src="/image1.jpg" 
-            alt="User Profile"
-            className="w-16 h-16 rounded-full object-cover" 
-          />
-          <div>
-            <p className="text-lg font-semibold">Welcome, Laiba Rustam</p>
-            <p className="text-sm text-gray-600">Chief Municipal Office</p>
-            <p className="text-sm text-gray-600">Wah Cantt</p>
+    <div className="min-h-screen flex flex-col items-center justify-center p-6">
+      <Link href="/" className="absolute top-8 left-8 text-xl text-gray-800 hover:text-black">
+        <FaArrowLeft />
+      </Link>
+
+      <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-3xl flex flex-col items-center">
+        <h1 className="text-2xl font-bold text-center mb-6">Sign Up</h1>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="w-full max-w-md space-y-4">
+          {/* Full Name */}
+          <div className="flex items-center gap-3 border-b pb-2">
+            <FaUser className="text-gray-500" />
+            <input
+              type="text"
+              placeholder="Full Name"
+              {...register('name', { required: 'Name is required' })}
+              className="w-full border-none outline-none bg-transparent text-sm"
+            />
           </div>
-        </div>
+          {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
 
-{/* Overview Cards */}
-<div className="grid grid-cols-3 gap-6 mb-10">
-          <div className="bg-green-200 p-6 rounded text-black flex items-center justify-center flex-col hover:bg-green-300 hover:shadow-xl transform hover:scale-105 transition-all duration-300">
-            <FaChartBar className="text-4xl mb-4" /> {/* Icon in the center */}
-            <h3 className="text-lg font-bold">Total Reports</h3>
-            <p className="text-3xl font-semibold mt-2">25</p>
+          {/* Email */}
+          <div className="flex items-center gap-3 border-b pb-2">
+            <FaEnvelope className="text-gray-500" />
+            <input
+              type="email"
+              placeholder="Email"
+              {...register('email', {
+                required: 'Email is required',
+                pattern: {
+                  value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/,
+                  message: 'Invalid email address',
+                },
+              })}
+              className="w-full border-none outline-none bg-transparent text-sm"
+            />
           </div>
-          <div className="bg-blue-200 p-6 rounded text-black flex items-center justify-center flex-col hover:bg-blue-300 hover:shadow-xl transform hover:scale-105 transition-all duration-300">
-            <FaCheckCircle className="text-4xl mb-4" /> {/* Icon in the center */}
-            <h3 className="text-lg font-bold">Resolved Reports</h3>
-            <p className="text-3xl font-semibold mt-2">08</p>
+          {errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
+
+          {/* Phone Number */}
+          <div className="flex items-center gap-3 border-b pb-2">
+            <FaPhone className="text-gray-500" />
+            <input
+              type="text"
+              placeholder="Phone Number"
+              {...register('phone', { required: 'Phone number is required' })}
+              className="w-full border-none outline-none bg-transparent text-sm"
+            />
           </div>
-          <div className="bg-yellow-200 p-6 rounded text-black flex items-center justify-center flex-col hover:bg-yellow-300 hover:shadow-xl transform hover:scale-105 transition-all duration-300">
-            <FaExclamationTriangle className="text-4xl mb-4" /> {/* Icon in the center */}
-            <h3 className="text-lg font-bold">Pending Reports</h3>
-            <p className="text-3xl font-semibold mt-2">12</p>
+          {errors.phone && <p className="text-red-500 text-sm">{errors.phone.message}</p>}
+
+          {/* Password */}
+          <div className="flex items-center gap-3 border-b pb-2">
+            <FaLock className="text-gray-500" />
+            <input
+              type="password"
+              placeholder="Password"
+              {...register('password', {
+                required: 'Password is required',
+                minLength: { value: 6, message: 'Password must be at least 6 characters' },
+              })}
+              className="w-full border-none outline-none bg-transparent text-sm"
+            />
           </div>
-        </div>
+          {errors.password && <p className="text-red-500 text-sm">{errors.password.message}</p>}
 
-        {/* Graph Section */}
-        <div className="bg-white p-6 rounded shadow mb-10">
-          <h3 className="text-lg font-semibold mb-4">Graphs</h3>
-          <ReportsGraph />
-        </div>
+          {/* Confirm Password */}
+          <div className="flex items-center gap-3 border-b pb-2">
+            <FaLock className="text-gray-500" />
+            <input
+              type="password"
+              placeholder="Confirm Password"
+              {...register('confirmPassword', {
+                required: 'Confirm password is required',
+                validate: (value) => value === watch('password') || 'Passwords do not match',
+              })}
+              className="w-full border-none outline-none bg-transparent text-sm"
+            />
+          </div>
+          {errors.confirmPassword && <p className="text-red-500 text-sm">{errors.confirmPassword.message}</p>}
 
-        {/* Report Table */}
-        <div className="bg-white p-6 rounded shadow mb-10">
-          <h3 className="text-lg font-semibold mb-4">Report Table</h3>
-          <table className="w-full text-sm text-left">
-            <thead className="bg-gray-100">
-              <tr>
-                {["Report ID", "Issue Type", "Location", "Status", "Assigned To", "Actions"].map(header => (
-                  <th key={header} className="px-4 py-2 border">{header}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              <tr className="border-t">
-                <td className="px-4 py-2 border">1021</td>
-                <td className="px-4 py-2 border">Road & traffic light repairs</td>
-                <td className="px-4 py-2 border">Main Street</td>
-                <td className="px-4 py-2 border">Pending</td>
-                <td className="px-4 py-2 border">Municipal Corporation</td>
-                <td className="px-4 py-2 border text-blue-600 hover:underline cursor-pointer">Assign</td>
-              </tr>
-              <tr className="border-t">
-                <td className="px-4 py-2 border">1021</td>
-                <td className="px-4 py-2 border">Road & traffic light repairs</td>
-                <td className="px-4 py-2 border">Main Street</td>
-                <td className="px-4 py-2 border">Pending</td>
-                <td className="px-4 py-2 border">Municipal Corporation</td>
-                <td className="px-4 py-2 border text-blue-600 hover:underline cursor-pointer">Assign</td>
-              </tr>
-              <tr className="border-t">
-                <td className="px-4 py-2 border">1021</td>
-                <td className="px-4 py-2 border">Road & traffic light repairs</td>
-                <td className="px-4 py-2 border">Main Street</td>
-                <td className="px-4 py-2 border">Pending</td>
-                <td className="px-4 py-2 border">Municipal Corporation</td>
-                <td className="px-4 py-2 border text-blue-600 hover:underline cursor-pointer">Mark Done</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full py-2 mt-6 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition"
+          >
+            {isSubmitting ? 'Signing Up...' : 'Sign Up'}
+          </button>
+        </form>
 
-        {/* User Engagement Table */}
-        <div className="bg-white p-6 rounded shadow">
-          <h3 className="text-lg font-semibold mb-4">User Engagement Table</h3>
-          <table className="w-full text-sm text-left">
-            <thead className="bg-gray-100">
-              <tr>
-                {["User", "Reports Filed", "Resolved Issues", "Last Active", "Role"].map(header => (
-                  <th key={header} className="px-4 py-2 border">{header}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              <tr className="border-t">
-                <td className="px-4 py-2 border">John Doe</td>
-                <td className="px-4 py-2 border">12</td>
-                <td className="px-4 py-2 border">10</td>
-                <td className="px-4 py-2 border">Today</td>
-                <td className="px-4 py-2 border">Officer</td>
-              </tr>
-              <tr className="border-t">
-                <td className="px-4 py-2 border">John Doe</td>
-                <td className="px-4 py-2 border">12</td>
-                <td className="px-4 py-2 border">10</td>
-                <td className="px-4 py-2 border">Today</td>
-                <td className="px-4 py-2 border">Officer</td>
-              </tr>
-              <tr className="border-t">
-                <td className="px-4 py-2 border">John Doe</td>
-                <td className="px-4 py-2 border">12</td>
-                <td className="px-4 py-2 border">10</td>
-                <td className="px-4 py-2 border">Today</td>
-                <td className="px-4 py-2 border">Officer</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        {/* Footer */}
-        <footer className="text-center text-sm text-gray-600 mt-8">
-          © 2025 civicconect.com | Powered by civicconect.com
-        </footer>
-      </main>
+        <p className="mt-4 text-sm text-center">
+          Already have an account?{' '}
+          <Link href="/login" className="text-blue-600 hover:underline">
+            Login
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }
