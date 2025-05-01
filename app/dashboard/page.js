@@ -43,7 +43,7 @@ export default function Home() {
       {/* Main Content */}
       <main className="flex-1 bg-[#f9fafb] p-10 overflow-y-auto">
         {/* Header */}
-        <h2 className="text-2xl font-semibold mb-2">
+        <h2 className="text-2xl font-semibold mb-2 text-gray-800">
           Civic Connect - Admin Panel
         </h2>
         <div className="flex items-center gap-4 mb-10">
@@ -53,7 +53,7 @@ export default function Home() {
             alt="User Profile"
             className="w-16 h-16 rounded-full object-cover"
           />
-          <div>
+          <div className="text-gray-800">
             <p className="text-lg font-semibold">
               Welcome, {userData.full_name}
             </p>

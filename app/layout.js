@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 
 export default function RootLayout({ children }) {
   const pathname = usePathname();
-  const authPages = ["/", "/login", "/forgetpassword"];
+  const authPages = ["/", "/login", "/signup", "/forgetpassword"];
   const isAuthPage = authPages.includes(pathname);
 
   return (
