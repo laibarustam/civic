@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { FaTachometerAlt, FaTasks, FaChartLine, FaUsers, FaBell, FaUserAlt, FaCog, FaSignOutAlt } from 'react-icons/fa'; // Ensure icons are imported correctly
 
 const topLinks = [
-  { href: '/', label: 'Dashboard', icon: <FaTachometerAlt /> },
+  { href: '/dashboard', label: 'Dashboard', icon: <FaTachometerAlt /> },
   { href: '/task', label: 'Task', icon: <FaTasks /> },
   { href: '/analytics', label: 'Analytics', icon: <FaChartLine /> },
   { href: '/users', label: 'Users', icon: <FaUsers /> },
