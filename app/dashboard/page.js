@@ -1,41 +1,83 @@
-import ReportsGraph from '../components/ReportsGraph';
-import { FaChartBar, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
+"use client";
+
+import ReportsGraph from "../components/ReportsGraph";
+import {
+  FaChartBar,
+  FaCheckCircle,
+  FaExclamationTriangle,
+} from "react-icons/fa";
+import { useState, useEffect } from "react";
+import { auth } from "/firebase";
+import { db } from "/firebase";
+import { collection, doc, getDoc } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
 
 export default function Home() {
+  const [userData, setUserData] = useState({
+    full_name: "",
+    role: "",
+    location: "",
+  });
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        // Get user details from Firestore
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          setUserData({
+            full_name: data.full_name || "User",
+            role: data.role || "Not Specified",
+            location: data.location || "Not Specified",
+          });
+        }
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   return (
     <div className="flex min-h-screen">
       {/* Main Content */}
       <main className="flex-1 bg-[#f9fafb] p-10 overflow-y-auto">
         {/* Header */}
-        <h2 className="text-2xl font-semibold mb-2">Civic Connect - Admin Panel</h2>
+        <h2 className="text-2xl font-semibold mb-2 text-gray-800">
+          Civic Connect - Admin Panel
+        </h2>
         <div className="flex items-center gap-4 mb-10">
           {/* Image Section */}
-          <img 
-            src="/image1.jpg" 
+          <img
+            src="/image1.jpg"
             alt="User Profile"
-            className="w-16 h-16 rounded-full object-cover" 
+            className="w-16 h-16 rounded-full object-cover"
           />
-          <div>
-            <p className="text-lg font-semibold">Welcome, Laiba Rustam</p>
-            <p className="text-sm text-gray-600">Chief Municipal Office</p>
-            <p className="text-sm text-gray-600">Wah Cantt</p>
+          <div className="text-gray-800">
+            <p className="text-lg font-semibold">
+              Welcome, {userData.full_name}
+            </p>
+            <p className="text-sm text-gray-700">{userData.role}</p>
+            <p className="text-sm text-gray-700">{userData.location}</p>
           </div>
         </div>
 
-{/* Overview Cards */}
-<div className="grid grid-cols-3 gap-6 mb-10">
+        {/* Overview Cards */}
+        <div className="grid grid-cols-3 gap-6 mb-10">
           <div className="bg-green-200 p-6 rounded text-black flex items-center justify-center flex-col hover:bg-green-300 hover:shadow-xl transform hover:scale-105 transition-all duration-300">
             <FaChartBar className="text-4xl mb-4" /> {/* Icon in the center */}
             <h3 className="text-lg font-bold">Total Reports</h3>
             <p className="text-3xl font-semibold mt-2">25</p>
           </div>
           <div className="bg-blue-200 p-6 rounded text-black flex items-center justify-center flex-col hover:bg-blue-300 hover:shadow-xl transform hover:scale-105 transition-all duration-300">
-            <FaCheckCircle className="text-4xl mb-4" /> {/* Icon in the center */}
+            <FaCheckCircle className="text-4xl mb-4" />{" "}
+            {/* Icon in the center */}
             <h3 className="text-lg font-bold">Resolved Reports</h3>
             <p className="text-3xl font-semibold mt-2">08</p>
           </div>
           <div className="bg-yellow-200 p-6 rounded text-black flex items-center justify-center flex-col hover:bg-yellow-300 hover:shadow-xl transform hover:scale-105 transition-all duration-300">
-            <FaExclamationTriangle className="text-4xl mb-4" /> {/* Icon in the center */}
+            <FaExclamationTriangle className="text-4xl mb-4" />{" "}
+            {/* Icon in the center */}
             <h3 className="text-lg font-bold">Pending Reports</h3>
             <p className="text-3xl font-semibold mt-2">12</p>
           </div>
@@ -49,39 +91,62 @@ export default function Home() {
 
         {/* Report Table */}
         <div className="bg-white p-6 rounded shadow mb-10">
-          <h3 className="text-lg font-semibold mb-4">Report Table</h3>
-          <table className="w-full text-sm text-left">
+          <h3 className="text-lg font-semibold mb-4 text-gray-800">
+            Report Table
+          </h3>
+          <table className="w-full text-sm text-left text-gray-800">
             <thead className="bg-gray-100">
               <tr>
-                {["Report ID", "Issue Type", "Location", "Status", "Assigned To", "Actions"].map(header => (
-                  <th key={header} className="px-4 py-2 border">{header}</th>
+                {[
+                  "Report ID",
+                  "Issue Type",
+                  "Location",
+                  "Status",
+                  "Assigned To",
+                  "Actions",
+                ].map((header) => (
+                  <th key={header} className="px-4 py-2 border">
+                    {header}
+                  </th>
                 ))}
               </tr>
             </thead>
             <tbody>
               <tr className="border-t">
                 <td className="px-4 py-2 border">1021</td>
-                <td className="px-4 py-2 border">Road & traffic light repairs</td>
+                <td className="px-4 py-2 border">
+                  Road & traffic light repairs
+                </td>
                 <td className="px-4 py-2 border">Main Street</td>
                 <td className="px-4 py-2 border">Pending</td>
                 <td className="px-4 py-2 border">Municipal Corporation</td>
-                <td className="px-4 py-2 border text-blue-600 hover:underline cursor-pointer">Assign</td>
+                <td className="px-4 py-2 border text-blue-600 hover:underline cursor-pointer">
+                  Assign
+                </td>
               </tr>
               <tr className="border-t">
                 <td className="px-4 py-2 border">1021</td>
-                <td className="px-4 py-2 border">Road & traffic light repairs</td>
+                <td className="px-4 py-2 border">
+                  Road & traffic light repairs
+                </td>
                 <td className="px-4 py-2 border">Main Street</td>
                 <td className="px-4 py-2 border">Pending</td>
                 <td className="px-4 py-2 border">Municipal Corporation</td>
-                <td className="px-4 py-2 border text-blue-600 hover:underline cursor-pointer">Assign</td>
+                <td className="px-4 py-2 border text-blue-600 hover:underline cursor-pointer">
+                  Assign
+                </td>
               </tr>
               <tr className="border-t">
                 <td className="px-4 py-2 border">1021</td>
-                <td className="px-4 py-2 border">Road & traffic light repairs</td>
+                <td className="px-4 py-2 border">
+                  Road & traffic light repairs
+                </td>
                 <td className="px-4 py-2 border">Main Street</td>
                 <td className="px-4 py-2 border">Pending</td>
                 <td className="px-4 py-2 border">Municipal Corporation</td>
-                <td className="px-4 py-2 border text-blue-600 hover:underline cursor-pointer">Mark Done</td>
+                <td className="px-4 py-2 border text-blue-600 hover:underline cursor-pointer">
+                  Mark Done
+                </td>
               </tr>
             </tbody>
           </table>
@@ -89,12 +154,22 @@ export default function Home() {
 
         {/* User Engagement Table */}
         <div className="bg-white p-6 rounded shadow">
-          <h3 className="text-lg font-semibold mb-4">User Engagement Table</h3>
-          <table className="w-full text-sm text-left">
+          <h3 className="text-lg font-semibold mb-4 text-gray-800">
+            User Engagement Table
+          </h3>
+          <table className="w-full text-sm text-left text-gray-800">
             <thead className="bg-gray-100">
               <tr>
-                {["User", "Reports Filed", "Resolved Issues", "Last Active", "Role"].map(header => (
-                  <th key={header} className="px-4 py-2 border">{header}</th>
+                {[
+                  "User",
+                  "Reports Filed",
+                  "Resolved Issues",
+                  "Last Active",
+                  "Role",
+                ].map((header) => (
+                  <th key={header} className="px-4 py-2 border">
+                    {header}
+                  </th>
                 ))}
               </tr>
             </thead>
@@ -125,8 +200,8 @@ export default function Home() {
         </div>
 
         {/* Footer */}
-        <footer className="text-center text-sm text-gray-600 mt-8">
-          © 2025 civicconect.com | Powered by civicconect.com
+        <footer className="text-center text-sm text-gray-700 mt-8">
+          © 2025 civicconect.com | Developed by Wasif & Laiba
         </footer>
       </main>
     </div>
