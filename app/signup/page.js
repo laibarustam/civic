@@ -18,8 +18,13 @@ import {
 } from "react-icons/fa";
 import Link from "next/link";
 import { createUserWithEmailAndPassword } from "firebase/auth";
+import { FaImage } from "react-icons/fa";
+import { storage } from "/firebase";
 import { auth, db } from "/firebase";
 import { doc, setDoc } from "firebase/firestore";
+
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+
 
 export default function Home() {
   const {
@@ -31,6 +36,9 @@ export default function Home() {
   } = useForm();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [image, setImage] = useState(null);
+  const [imageURL, setImageURL] = useState("");
+
   const router = useRouter();
 
   const departments = [
@@ -58,8 +66,23 @@ export default function Home() {
       );
       const user = userCredential.user;
 
-      // Store additional user data in Firestore
-      await setDoc(doc(db, "user_admin", user.uid), {
+
+    // If an image is uploaded, upload it to Firebase Storage
+    if (image) {
+      const storageRef = ref(storage, `user_images/${user.uid}`);
+      const uploadTask = uploadBytesResumable(storageRef, image);
+
+      uploadTask.on(
+        "state_changed",
+        (snapshot) => {},
+        (error) => {
+          console.error("Image upload failed:", error);
+          setIsSubmitting(false);
+        },
+        () => {
+          getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+            // Store additional user data in Firestore
+            setDoc(doc(db, "user_admin", user.uid), {
         full_name: data.name,
         email: data.email,
         phone: data.phone,
@@ -68,35 +91,64 @@ export default function Home() {
         badge_number: data.badgeNumber,
         city: data.city,
         cnic: data.cnic,
+        image_url: downloadURL, // Save the image URL
         created_at: new Date().toISOString(),
         role: "Admin",
         status: "Active",
       });
-
       router.push("/login");
-    } catch (error) {
-      if (error.code === "auth/email-already-in-use") {
-        setError("email", { message: "Email is already in use" });
-      } else if (error.code === "auth/weak-password") {
-        setError("password", { message: "Password is too weak" });
-      } else {
-        setError("password", {
-          message: "An error occurred. Please try again.",
-        });
-      }
-      setIsSubmitting(false);
-    }
-  };
+    });
+  }
+);
+} else {
+// If no image is uploaded, proceed to save user data without image
+await setDoc(doc(db, "user_admin", user.uid), {
+  full_name: data.name,
+  email: data.email,
+  phone: data.phone,
+  rank: data.rank,
+  department: data.department,
+  badge_number: data.badgeNumber,
+  city: data.city,
+  cnic: data.cnic,
+  created_at: new Date().toISOString(),
+  role: "Admin",
+  status: "Active",
+});
+router.push("/login");
+}
+} catch (error) {
+if (error.code === "auth/email-already-in-use") {
+setError("email", { message: "Email is already in use" });
+} else if (error.code === "auth/weak-password") {
+setError("password", { message: "Password is too weak" });
+} else {
+setError("password", {
+  message: "An error occurred. Please try again.",
+});
+}
+setIsSubmitting(false);
+}
+};
 
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-b from-blue-50 to-white">
-      <Link
-        href="/"
-        className="absolute top-8 left-8 flex items-center gap-2 text-gray-800 hover:text-blue-600 transition-colors"
-      >
-        <FaArrowLeft className="text-xl" />
-        <span>Back to Home</span>
-      </Link>
+// Handle image selection
+const handleImageChange = (e) => {
+const file = e.target.files[0];
+if (file) {
+setImage(file);
+setImageURL(URL.createObjectURL(file)); // Display the selected image
+}
+};
+
+return (
+<div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-b from-blue-50 to-white">
+<Link
+href="/"
+className="absolute top-8 left-8 flex items-center gap-2 text-gray-800 hover:text-blue-600 transition-colors"
+>
+<FaArrowLeft className="text-xl" />
+<span>Back to Home</span>
+</Link>
 
       <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-4xl">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
@@ -132,12 +184,39 @@ export default function Home() {
               Create Your Account
             </h1>
 
+
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              {/* Image Upload */}
+<div className="space-y-4">
+  <label className="text-sm text-gray-600 mb-1 block">
+    Upload Profile Image
+  </label>
+  <div className="flex items-center gap-3 border rounded-lg p-2 focus-within:border-blue-500 transition">
+    <FaImage className="text-gray-400" />
+    <input
+      type="file"
+      accept="image/*"
+      onChange={handleImageChange}
+      className="w-full border-none outline-none bg-transparent text-sm"
+    />
+  </div>
+  {image && (
+    <div className="mt-2">
+      <img
+        src={imageURL}
+        alt="Preview"
+        className="w-32 h-32 object-cover rounded-full"
+      />
+    </div>
+  )}
+</div>
+
               {/* Personal Information */}
               <div className="space-y-4">
                 <h3 className="font-semibold text-gray-700">
                   Personal Information
                 </h3>
+                
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm text-gray-600 mb-1 block">
@@ -186,6 +265,8 @@ export default function Home() {
                     )}
                   </div>
                 </div>
+              
+                
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -415,6 +496,6 @@ export default function Home() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
   );
 }

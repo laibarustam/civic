@@ -33,11 +33,21 @@ export default function ProfilePage() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        // Get user details from Firestore
-        const userDoc = await getDoc(doc(db, "user_admin", user.uid));
-        if (userDoc.exists()) {
-          setUserData(userDoc.data());
+        console.log("User is logged in:", user.uid);  // Debug log
+        try {
+          // Fetching user data from Firestore
+          const userDoc = await getDoc(doc(db, "user_admin", user.uid));
+          if (userDoc.exists()) {
+            console.log("User data fetched:", userDoc.data());  // Debug log
+            setUserData(userDoc.data());
+          } else {
+            console.log("No user document found");
+          }
+        } catch (error) {
+          console.error("Error fetching user data:", error);  // Error log
         }
+      } else {
+        console.log("User not logged in");
       }
     });
 
