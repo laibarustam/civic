@@ -132,8 +132,8 @@ export default function Analytics() {
         </section>
   
         {/* Footer */}
-        <footer className="text-center text-sm text-gray-600 mt-8">
-          © 2025 civicconect.com | Powered by civicconect.com
+        <footer className="text-center text-sm text-gray-700 mt-8">
+          © 2025 civicconect.com | Developed by Wasif & Laiba
         </footer>
       </main>
     );

@@ -210,7 +210,7 @@ export default function Home() {
           <table className="w-full text-sm text-left text-gray-800">
             <thead className="bg-gray-100">
               <tr>
-                {["User", "Reports Filed", "Resolved Issues", "Last Active", "Role"].map((header) => (
+                {["User", "Email", "Role", "Location"].map((header) => (
                   <th key={header} className="px-4 py-2 border">{header}</th>
                 ))}
               </tr>
@@ -219,10 +219,9 @@ export default function Home() {
               {users.map((user) => (
                 <tr key={user.id} className="border-t">
                   <td className="px-4 py-2 border">{user.full_name || "N/A"}</td>
-                  <td className="px-4 py-2 border">{user.reports_filed || 0}</td>
-                  <td className="px-4 py-2 border">{user.resolved_issues || 0}</td>
-                  <td className="px-4 py-2 border">{user.last_active || "N/A"}</td>
-                  <td className="px-4 py-2 border">{user.role || "User"}</td>
+                  <td className="px-4 py-2 border">{user.email}</td>
+                  <td className="px-4 py-2 border">{user.role}</td>
+                  <td className="px-4 py-2 border">{user.locations}</td> {/* Use location field */}
                 </tr>
               ))}
             </tbody>

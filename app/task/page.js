@@ -356,7 +356,9 @@ useEffect(() => {
       </section>
 
 
-      <footer className="text-center text-sm text-gray-600 mt-8"> © 2025 Civic Connect. All rights reserved.</footer>
-    </main>
+{/* Footer */}
+<footer className="text-center text-sm text-gray-700 mt-8">
+          © 2025 civicconect.com | Developed by Wasif & Laiba
+        </footer>    </main>
   );
 }
