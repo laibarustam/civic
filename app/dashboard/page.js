@@ -7,36 +7,105 @@ import {
   FaExclamationTriangle,
 } from "react-icons/fa";
 import { useState, useEffect } from "react";
-import { auth } from "/firebase";
-import { db } from "/firebase";
-import { collection, doc, getDoc } from "firebase/firestore";
+import { auth, db } from "/firebase";
+import {
+  collection,
+  doc,
+  getDoc,
+  query,
+  onSnapshot,
+} from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 
 export default function Home() {
   const [userData, setUserData] = useState({
     full_name: "",
     role: "",
-    location: "",
+    department: "",
   });
+  const [reports, setReports] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [taskHistory, setTaskHistory] = useState([]);
 
+  // ✅ Fetch logged-in user's admin data
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        // Get user details from Firestore
-        const userDoc = await getDoc(doc(db, "users", user.uid));
+    const unsubscribe = onAuthStateChanged(auth, async (user_admin) => {
+      console.log("Auth user:", user_admin);
+      if (user_admin) {
+        // Fetch data from the correct collection (user_admin instead of users)
+        const userDoc = await getDoc(doc(db, "user_admin", user_admin.uid));
         if (userDoc.exists()) {
           const data = userDoc.data();
+          console.log("User data:", data);
           setUserData({
             full_name: data.full_name || "User",
             role: data.role || "Not Specified",
-            location: data.location || "Not Specified",
+            department: data.department || "Not Specified",
           });
+        } else {
+          console.warn("No such user document in Firestore.");
         }
+      } else {
+        console.warn("User is not authenticated.");
       }
     });
-
+  
     return () => unsubscribe();
   }, []);
+  
+  // Fetch all reports data
+  useEffect(() => {
+    const q = query(collection(db, "reports"));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fetchedReports = snapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          date: data.timestamp
+            ? data.timestamp.toDate().toLocaleDateString()
+            : "",
+        };
+      });
+      setReports(fetchedReports);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Fetch all users data
+  useEffect(() => {
+    const q = query(collection(db, "users"));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fetchedUsers = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setUsers(fetchedUsers);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Fetch all task history data
+  useEffect(() => {
+    const q = query(collection(db, "task_history"));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fetchedHistory = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setTaskHistory(fetchedHistory);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Helper: Get task for a given report ID
+  const getTaskForReport = (reportId) => {
+    return taskHistory.find((task) => task.id === reportId);
+  };
+
+  const totalReports = reports.length;
+  const resolvedReports = reports.filter((r) => r.status === "Resolved").length;
+  const pendingReports = reports.filter((r) => r.status === "Pending").length;
 
   return (
     <div className="flex min-h-screen">
@@ -47,39 +116,34 @@ export default function Home() {
           Civic Connect - Admin Panel
         </h2>
         <div className="flex items-center gap-4 mb-10">
-          {/* Image Section */}
           <img
             src="/image1.jpg"
             alt="User Profile"
             className="w-16 h-16 rounded-full object-cover"
           />
           <div className="text-gray-800">
-            <p className="text-lg font-semibold">
-              Welcome, {userData.full_name}
-            </p>
+            <p className="text-lg font-semibold">Welcome, {userData.full_name}</p>
             <p className="text-sm text-gray-700">{userData.role}</p>
-            <p className="text-sm text-gray-700">{userData.location}</p>
-          </div>
+            <p className="text-sm text-gray-700">{userData.department}</p>
+            </div>
         </div>
 
         {/* Overview Cards */}
         <div className="grid grid-cols-3 gap-6 mb-10">
           <div className="bg-green-200 p-6 rounded text-black flex items-center justify-center flex-col hover:bg-green-300 hover:shadow-xl transform hover:scale-105 transition-all duration-300">
-            <FaChartBar className="text-4xl mb-4" /> {/* Icon in the center */}
+            <FaChartBar className="text-4xl mb-4" />
             <h3 className="text-lg font-bold">Total Reports</h3>
-            <p className="text-3xl font-semibold mt-2">25</p>
+            <p className="text-3xl font-semibold mt-2">{totalReports}</p>
           </div>
           <div className="bg-blue-200 p-6 rounded text-black flex items-center justify-center flex-col hover:bg-blue-300 hover:shadow-xl transform hover:scale-105 transition-all duration-300">
-            <FaCheckCircle className="text-4xl mb-4" />{" "}
-            {/* Icon in the center */}
+            <FaCheckCircle className="text-4xl mb-4" />
             <h3 className="text-lg font-bold">Resolved Reports</h3>
-            <p className="text-3xl font-semibold mt-2">08</p>
+            <p className="text-3xl font-semibold mt-2">{resolvedReports}</p>
           </div>
           <div className="bg-yellow-200 p-6 rounded text-black flex items-center justify-center flex-col hover:bg-yellow-300 hover:shadow-xl transform hover:scale-105 transition-all duration-300">
-            <FaExclamationTriangle className="text-4xl mb-4" />{" "}
-            {/* Icon in the center */}
+            <FaExclamationTriangle className="text-4xl mb-4" />
             <h3 className="text-lg font-bold">Pending Reports</h3>
-            <p className="text-3xl font-semibold mt-2">12</p>
+            <p className="text-3xl font-semibold mt-2">{pendingReports}</p>
           </div>
         </div>
 
@@ -91,9 +155,7 @@ export default function Home() {
 
         {/* Report Table */}
         <div className="bg-white p-6 rounded shadow mb-10">
-          <h3 className="text-lg font-semibold mb-4 text-gray-800">
-            Report Table
-          </h3>
+          <h3 className="text-lg font-semibold mb-4 text-gray-800">Report Table</h3>
           <table className="w-full text-sm text-left text-gray-800">
             <thead className="bg-gray-100">
               <tr>
@@ -103,7 +165,8 @@ export default function Home() {
                   "Location",
                   "Status",
                   "Assigned To",
-                  "Actions",
+                  "Task Info",
+
                 ].map((header) => (
                   <th key={header} className="px-4 py-2 border">
                     {header}
@@ -112,89 +175,56 @@ export default function Home() {
               </tr>
             </thead>
             <tbody>
-              <tr className="border-t">
-                <td className="px-4 py-2 border">1021</td>
-                <td className="px-4 py-2 border">
-                  Road & traffic light repairs
-                </td>
-                <td className="px-4 py-2 border">Main Street</td>
-                <td className="px-4 py-2 border">Pending</td>
-                <td className="px-4 py-2 border">Municipal Corporation</td>
-                <td className="px-4 py-2 border text-blue-600 hover:underline cursor-pointer">
-                  Assign
-                </td>
-              </tr>
-              <tr className="border-t">
-                <td className="px-4 py-2 border">1021</td>
-                <td className="px-4 py-2 border">
-                  Road & traffic light repairs
-                </td>
-                <td className="px-4 py-2 border">Main Street</td>
-                <td className="px-4 py-2 border">Pending</td>
-                <td className="px-4 py-2 border">Municipal Corporation</td>
-                <td className="px-4 py-2 border text-blue-600 hover:underline cursor-pointer">
-                  Assign
-                </td>
-              </tr>
-              <tr className="border-t">
-                <td className="px-4 py-2 border">1021</td>
-                <td className="px-4 py-2 border">
-                  Road & traffic light repairs
-                </td>
-                <td className="px-4 py-2 border">Main Street</td>
-                <td className="px-4 py-2 border">Pending</td>
-                <td className="px-4 py-2 border">Municipal Corporation</td>
-                <td className="px-4 py-2 border text-blue-600 hover:underline cursor-pointer">
-                  Mark Done
-                </td>
-              </tr>
+              {reports.map((report) => {
+                const task = getTaskForReport(report.id);
+                return (
+                  <tr key={report.id} className="border-t">
+                    <td className="px-4 py-2 border">{report.id}</td>
+                    <td className="px-4 py-2 border">{report.category || "N/A"}</td>
+                    <td className="px-4 py-2 border">{report.location || "N/A"}</td>
+                    <td className="px-4 py-2 border">{report.status || "N/A"}</td>
+                    <td className="px-4 py-2 border">
+                      {report.assigned_to || "Unassigned"}
+                    </td>
+                    <td className="px-4 py-2 border text-sm">
+                  {task ? (
+                      <div>
+                 <div><b>Assigned:</b> {task.assigned_to}</div>
+                 <div><b>Done At:</b> {task.completedAt?.toDate().toLocaleString()}</div>
+                 <div><b>Note:</b> {task.instruction}</div>
+                 </div>
+  ) : (
+    <span className="text-gray-500">Not Started</span>
+  )}
+</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
 
         {/* User Engagement Table */}
         <div className="bg-white p-6 rounded shadow">
-          <h3 className="text-lg font-semibold mb-4 text-gray-800">
-            User Engagement Table
-          </h3>
+          <h3 className="text-lg font-semibold mb-4 text-gray-800">User Engagement Table</h3>
           <table className="w-full text-sm text-left text-gray-800">
             <thead className="bg-gray-100">
               <tr>
-                {[
-                  "User",
-                  "Reports Filed",
-                  "Resolved Issues",
-                  "Last Active",
-                  "Role",
-                ].map((header) => (
-                  <th key={header} className="px-4 py-2 border">
-                    {header}
-                  </th>
+                {["User", "Reports Filed", "Resolved Issues", "Last Active", "Role"].map((header) => (
+                  <th key={header} className="px-4 py-2 border">{header}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              <tr className="border-t">
-                <td className="px-4 py-2 border">John Doe</td>
-                <td className="px-4 py-2 border">12</td>
-                <td className="px-4 py-2 border">10</td>
-                <td className="px-4 py-2 border">Today</td>
-                <td className="px-4 py-2 border">Officer</td>
-              </tr>
-              <tr className="border-t">
-                <td className="px-4 py-2 border">John Doe</td>
-                <td className="px-4 py-2 border">12</td>
-                <td className="px-4 py-2 border">10</td>
-                <td className="px-4 py-2 border">Today</td>
-                <td className="px-4 py-2 border">Officer</td>
-              </tr>
-              <tr className="border-t">
-                <td className="px-4 py-2 border">John Doe</td>
-                <td className="px-4 py-2 border">12</td>
-                <td className="px-4 py-2 border">10</td>
-                <td className="px-4 py-2 border">Today</td>
-                <td className="px-4 py-2 border">Officer</td>
-              </tr>
+              {users.map((user) => (
+                <tr key={user.id} className="border-t">
+                  <td className="px-4 py-2 border">{user.full_name || "N/A"}</td>
+                  <td className="px-4 py-2 border">{user.reports_filed || 0}</td>
+                  <td className="px-4 py-2 border">{user.resolved_issues || 0}</td>
+                  <td className="px-4 py-2 border">{user.last_active || "N/A"}</td>
+                  <td className="px-4 py-2 border">{user.role || "User"}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
