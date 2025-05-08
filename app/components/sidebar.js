@@ -29,7 +29,7 @@ export default function Sidebar() {
   }
 
   return (
-    <div className="w-64 bg-blue-900 text-white flex flex-col justify-between min-h-screen p-4">
+    <div className="w-64 bg-gradient-to-br from-sky-600 to-blue-800 text-white flex flex-col justify-between min-h-screen p-4">
       {/* Top Section */}
       <div>
         <div className="flex flex-col items-center mb-8">
@@ -44,8 +44,8 @@ export default function Sidebar() {
             <Link
               key={link.href}
               href={link.href}
-              className={`p-2 rounded hover:bg-white hover:text-blue-900 transition flex items-center gap-2 ${
-                pathname === link.href ? 'bg-white text-blue-900 font-semibold' : ''
+              className={`p-2 rounded hover:bg-white hover:text-sky-600 transition flex items-center gap-2 ${
+                pathname === link.href ? 'bg-white text-sky-600 font-semibold' : ''
               }`}
             >
               {link.icon} {/* Displaying icon */}
@@ -56,14 +56,14 @@ export default function Sidebar() {
       </div>
 
       {/* Bottom Section */}
-      <div className="pt-8 border-t border-blue-700">
+      <div className="pt-8 border-t border-sky-500">
         <nav className="flex flex-col gap-3">
           {bottomLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className={`p-2 rounded hover:bg-white hover:text-blue-900 transition flex items-center gap-2 ${
-                pathname === link.href ? 'bg-white text-blue-900 font-semibold' : ''
+              className={`p-2 rounded hover:bg-white hover:text-sky-600 transition flex items-center gap-2 ${
+                pathname === link.href ? 'bg-white text-sky-600 font-semibold' : ''
               }`}
             >
               {link.icon} {/* Displaying icon */}
