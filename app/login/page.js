@@ -40,7 +40,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-b from-blue-50 to-white">
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-b from-[#E0F7FF] to-[#F9D5E5]">
       <Link
         href="/"
         className="absolute top-8 left-8 flex items-center gap-2 text-gray-800 hover:text-blue-600 transition-colors"
@@ -53,13 +53,15 @@ export default function LoginPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Left side - Welcome Content */}
           <div className="hidden lg:flex flex-col justify-center">
-            <Image
+          <Image
               src="/logo.png"
               alt="Civic Connect Logo"
-              width={150}
-              height={40}
-              className="h-10 w-auto mb-8"
-            />
+              width={250} // Reasonable width based on your design needs
+              height={60} // Adjust the height to maintain the aspect ratio of the logo
+              className="mb-8" // Remove the object-contain if it's not needed
+          />
+
+
             <h2 className="text-3xl font-bold text-gray-800 mb-6">
               Welcome Back!
             </h2>

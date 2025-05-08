@@ -141,8 +141,7 @@ setImageURL(URL.createObjectURL(file)); // Display the selected image
 };
 
 return (
-<div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-b from-blue-50 to-white">
-<Link
+<div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-br from-sky-400 via-pink-300 to-purple-400"> <Link
 href="/"
 className="absolute top-8 left-8 flex items-center gap-2 text-gray-800 hover:text-blue-600 transition-colors"
 >
@@ -497,5 +496,6 @@ className="absolute top-8 left-8 flex items-center gap-2 text-gray-800 hover:tex
         </div>
       </div>
       </div>
+      
   );
 }
