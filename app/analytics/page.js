@@ -37,7 +37,24 @@ export default function Analytics() {
 
     fetchReports();
   }, []);
+  const [users, setUsers] = useState([]);
 
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const snapshot = await getDocs(collection(db, 'users'));
+        const userList = snapshot.docs.map(doc => doc.data());
+        setUsers(userList);
+      } catch (err) {
+        console.error('Error fetching users:', err);
+      }
+    };
+  
+    fetchUsers();
+  }, []);
+  
+  const filteredUsers = users; // Replace this with actual filters if needed
+  
   return (
     <main className="min-h-screen bg-[#f5f7fb] p-8">
       <h2 className="text-2xl font-semibold text-center mb-8">Civic Connect - Analytics and Insights</h2>
@@ -91,44 +108,34 @@ export default function Analytics() {
 
   
         {/* User Engagement Table */}
-        <section className="bg-white p-6 rounded shadow">
-          <h3 className="text-lg font-semibold mb-4">User Engagement Table</h3>
-          <div className="overflow-auto">
-            <table className="min-w-full border">
-              <thead>
-                <tr className="bg-gray-100 text-left">
-                  <th className="p-2 border">User</th>
-                  <th className="p-2 border">Reports Filed</th>
-                  <th className="p-2 border">Resolved Issues</th>
-                  <th className="p-2 border">Last Active</th>
-                  <th className="p-2 border">Role</th>
+        
+      {/* Table */}
+      <section className="max-w-5xl mx-auto mb-12">
+        <h3 className="text-xl font-semibold mb-4">User Management Table</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full bg-white shadow border rounded text-sm">
+            <thead className="bg-gray-100">
+              <tr className="text-left">
+                <th className="p-3">Serial no</th>
+                <th className="p-3">Name</th>
+                <th className="p-3">Email</th>
+                <th className="p-3">Role</th>
+                <th className="p-3">Location</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredUsers.map((user, index) => (
+                <tr key={index} className="border-t">
+                  <td className="p-3">{index + 1}</td>
+                  <td className="p-3">{user.full_name || 'N/A'}</td>
+                  <td className="p-3">{user.email}</td>
+                  <td className="p-3">{user.role}</td>
+                  <td className="p-3">{user.locations}</td>
                 </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td className="p-2 border">John Doe</td>
-                  <td className="p-2 border">12</td>
-                  <td className="p-2 border">10</td>
-                  <td className="p-2 border">Today</td>
-                  <td className="p-2 border">Officer</td>
-                </tr>
-                <tr>
-                  <td className="p-2 border">Jane Smith</td>
-                  <td className="p-2 border">8</td>
-                  <td className="p-2 border">6</td>
-                  <td className="p-2 border">Yesterday</td>
-                  <td className="p-2 border">Moderator</td>
-                </tr>
-                <tr>
-                  <td className="p-2 border">Alex Brown</td>
-                  <td className="p-2 border">20</td>
-                  <td className="p-2 border">15</td>
-                  <td className="p-2 border">3 Days Ago</td>
-                  <td className="p-2 border">Admin</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
+        </div>
         </section>
   
         {/* Footer */}
