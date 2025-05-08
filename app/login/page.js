@@ -45,7 +45,7 @@ export default function LoginPage() {
         href="/"
         className="absolute top-8 left-8 flex items-center gap-2 text-gray-800 hover:text-blue-600 transition-colors"
       >
-        <FaArrowLeft className="text-white-800 " />
+        <FaArrowLeft className="text-xl" />
         <span>Back to Home</span>
       </Link>
 

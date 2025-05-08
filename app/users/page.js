@@ -38,6 +38,13 @@ export default function UserPage() {
 
     return matchesSearch && matchesRole;
   });
+// Just before return (
+  const selectedLocation = users
+  .filter((user) => user.locations?.latitude && user.locations?.longitude)
+  .map((user) => ({
+    latitude: user.locations.latitude,
+    longitude: user.locations.longitude,
+  }));
 
   return (
     <main className="bg-[#f5f7fb] min-h-screen p-8">
@@ -154,16 +161,13 @@ export default function UserPage() {
       </section>
 
   {/* Map */}
-<section className="max-w-4xl mx-auto mb-10">
-  <h3 className="text-xl font-semibold mb-4">Google Maps to Show Issue Locations</h3>
-  <div className="rounded shadow overflow-hidden">
-    <img
-      src="https://maps.googleapis.com/maps/api/staticmap?..."
-      alt="Map Placeholder"
-      className="w-full"
-    />
-  </div>
-</section>
+    {/* Map Heatmap */}
+    <div className="max-w-5xl mx-auto mb-10">
+        <h3 className="text-xl font-semibold mb-4">User Locations on Map</h3>
+        <div className="rounded shadow overflow-hidden">
+          <ReportMap selectedLocation={selectedLocation} />
+        </div>
+      </div>
 
 
       {/* Footer */}

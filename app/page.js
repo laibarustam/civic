@@ -99,8 +99,7 @@ export default function Welcome() {
                 title: "Mobile Friendly",
                 desc: (
                   <>
-                    Access services and manage tasks on-the-go with our mobile
-                    app.
+                    Access services and manage tasks on-the-go with our mobile app.
                     <div className="flex justify-center gap-4 mt-4 text-[#333]">
                       <span className="flex items-center gap-2">
                         <FaApple /> iOS
@@ -111,6 +110,7 @@ export default function Welcome() {
                     </div>
                   </>
                 ),
+                
               },
             ].map((card, idx) => (
               <div

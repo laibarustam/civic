@@ -1,30 +1,43 @@
-import { LoadScript, GoogleMap } from '@react-google-maps/api';
+import React, { useState, useEffect } from 'react';
+import { GoogleMap, LoadScript, HeatmapLayer } from '@react-google-maps/api';
 
 const containerStyle = {
   width: '100%',
   height: '400px',
 };
 
-const center = {
-  lat: 33.6844,
+const defaultCenter = {
+  lat: 33.6844, // Default center: Pakistan example
   lng: 73.0479,
 };
 
-export default function ReportMap() {
+const ReportMap = ({ selectedLocation }) => {
+  const [heatmapData, setHeatmapData] = useState([]);
+
+  useEffect(() => {
+    if (typeof window.google !== 'undefined' && selectedLocation?.length) {
+      const points = selectedLocation.map((loc) =>
+        new window.google.maps.LatLng(loc.latitude, loc.longitude)
+      );
+      setHeatmapData(points);
+    }
+  }, [selectedLocation]);
+
   return (
-    <div className="max-w-4xl mx-auto mb-10">
-      <h3 className="text-xl font-semibold mb-4">Google Map - Issue Locations</h3>
-      <div className="rounded shadow overflow-hidden">
-        <LoadScript googleMapsApiKey="YOUR_GOOGLE_MAPS_API_KEY">
-          <GoogleMap
-            mapContainerStyle={containerStyle}
-            center={center}
-            zoom={13}
-          >
-            {/* We'll add markers or heatmap later */}
-          </GoogleMap>
-        </LoadScript>
-      </div>
-    </div>
+    <LoadScript googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY} libraries={['visualization']}>
+      <GoogleMap mapContainerStyle={containerStyle} center={defaultCenter} zoom={10}>
+        {heatmapData.length > 0 && (
+          <HeatmapLayer
+            data={heatmapData}
+            options={{
+              radius: 20,
+              opacity: 0.6,
+            }}
+          />
+        )}
+      </GoogleMap>
+    </LoadScript>
   );
-}
+};
+
+export default ReportMap;
