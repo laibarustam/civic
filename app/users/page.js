@@ -1,8 +1,9 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { db } from '/firebase'; // Import Firestore instance
+import { db } from '/firebase';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { FaUsers, FaUserShield, FaUserCheck, FaRegUser } from 'react-icons/fa';
+import ReportMap from '../components/ReportMap';
 
 export default function UserPage() {
   const [users, setUsers] = useState([]);
@@ -10,30 +11,39 @@ export default function UserPage() {
   const [totalAdmins, setTotalAdmins] = useState(0);
   const [totalOfficers, setTotalOfficers] = useState(0);
   const [totalCitizens, setTotalCitizens] = useState(0);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [roleFilter, setRoleFilter] = useState('');
 
   useEffect(() => {
     const usersCollection = collection(db, 'users');
 
-    // Real-time listener for fetching user data
     const unsubscribe = onSnapshot(usersCollection, (snapshot) => {
       const usersList = snapshot.docs.map((doc) => doc.data());
       setUsers(usersList);
       setTotalUsers(usersList.length);
-
-      // Filter by roles
-      setTotalAdmins(usersList.filter(user => user.role === 'Admin').length);
-      setTotalOfficers(usersList.filter(user => user.role === 'Officer').length);
-      setTotalCitizens(usersList.filter(user => user.role === 'Citizen').length);
+      setTotalAdmins(usersList.filter((user) => user.role === 'Admin').length);
+      setTotalOfficers(usersList.filter((user) => user.role === 'Officer').length);
+      setTotalCitizens(usersList.filter((user) => user.role === 'Citizen').length);
     });
 
-    return () => unsubscribe(); // Clean up the listener when the component is unmounted
+    return () => unsubscribe();
   }, []);
+
+  const filteredUsers = users.filter((user) => {
+    const matchesSearch =
+      user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesRole = roleFilter ? user.role === roleFilter : true;
+
+    return matchesSearch && matchesRole;
+  });
 
   return (
     <main className="bg-[#f5f7fb] min-h-screen p-8">
       <h2 className="text-2xl font-semibold text-center mb-6">Civic Connect - User Management Panel</h2>
 
-      {/* User Overview Cards with Icons and Hover Effects */}
+      {/* Cards */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10 max-w-5xl mx-auto text-white text-center">
         <div className="bg-green-300 text-black py-6 rounded shadow hover:bg-green-400 hover:shadow-xl transform hover:scale-105 transition-all duration-300">
           <FaUsers className="text-4xl mb-4 mx-auto" />
@@ -57,7 +67,7 @@ export default function UserPage() {
         </div>
       </section>
 
-      {/* User Table */}
+      {/* Table */}
       <section className="max-w-5xl mx-auto mb-12">
         <h3 className="text-xl font-semibold mb-4">User Management Table</h3>
         <div className="overflow-x-auto">
@@ -73,13 +83,13 @@ export default function UserPage() {
               </tr>
             </thead>
             <tbody>
-              {users.map((user, index) => (
+              {filteredUsers.map((user, index) => (
                 <tr key={index} className="border-t">
-                  <td className="p-3">{index + 1}</td> {/* Using index + 1 as serial_no */}
-                  <td className="p-3">{user.full_name || 'N/A'}</td> {/* Use full_name field */}
+                  <td className="p-3">{index + 1}</td>
+                  <td className="p-3">{user.full_name || 'N/A'}</td>
                   <td className="p-3">{user.email}</td>
                   <td className="p-3">{user.role}</td>
-                  <td className="p-3">{user.locations}</td> {/* Use location field */}
+                  <td className="p-3">{user.locations}</td>
                   <td className="p-3 space-x-2">
                     {user.status === 'Suspended' ? (
                       <button className="text-green-600 font-medium">✔ Activate</button>
@@ -101,41 +111,65 @@ export default function UserPage() {
           <input
             type="text"
             placeholder="Search by Name, EmailID"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className="border p-2 rounded-l w-full"
           />
           <button className="bg-blue-600 text-white px-4 py-2 rounded-r">🔍</button>
         </div>
 
-        {/* Filter Labels */}
+        {/* Role Filter */}
         <div className="flex gap-4 mt-4">
-          <span className="bg-red-200 px-4 py-1 rounded cursor-pointer hover:bg-red-300 hover:shadow-lg transform hover:scale-105 transition-all duration-300">
+          <span
+            onClick={() => setRoleFilter('Admin')}
+            className={`px-4 py-1 rounded cursor-pointer transition-all duration-300 ${
+              roleFilter === 'Admin' ? 'bg-red-400' : 'bg-red-200 hover:bg-red-300 hover:shadow-lg transform hover:scale-105'
+            }`}
+          >
             Admin
           </span>
-          <span className="bg-green-200 px-4 py-1 rounded cursor-pointer hover:bg-green-300 hover:shadow-lg transform hover:scale-105 transition-all duration-300">
-             Officer
+          <span
+            onClick={() => setRoleFilter('Officer')}
+            className={`px-4 py-1 rounded cursor-pointer transition-all duration-300 ${
+              roleFilter === 'Officer' ? 'bg-green-400' : 'bg-green-200 hover:bg-green-300 hover:shadow-lg transform hover:scale-105'
+            }`}
+          >
+            Officer
           </span>
-          <span className="bg-yellow-200 px-4 py-1 rounded cursor-pointer hover:bg-yellow-300 hover:shadow-lg transform hover:scale-105 transition-all duration-300">
-           Citizen
+          <span
+            onClick={() => setRoleFilter('Citizen')}
+            className={`px-4 py-1 rounded cursor-pointer transition-all duration-300 ${
+              roleFilter === 'Citizen' ? 'bg-yellow-400' : 'bg-yellow-200 hover:bg-yellow-300 hover:shadow-lg transform hover:scale-105'
+            }`}
+          >
+            Citizen
+          </span>
+          <span
+            onClick={() => setRoleFilter('')}
+            className="px-4 py-1 rounded cursor-pointer bg-gray-200 hover:bg-gray-300 hover:shadow-lg transform hover:scale-105 transition-all duration-300"
+          >
+            All
           </span>
         </div>
       </section>
 
-      {/* Map */}
-      <section className="max-w-4xl mx-auto mb-10">
-        <h3 className="text-xl font-semibold mb-4">Google Maps to Show Issue Locations</h3>
-        <div className="rounded shadow overflow-hidden">
-          <img
-            src="https://maps.googleapis.com/maps/api/staticmap?center=33.6844,73.0479&zoom=14&size=600x300&maptype=roadmap&markers=color:red%7Clabel:C%7C33.6844,73.0479&key=YOUR_API_KEY"
-            alt="Map Placeholder"
-            className="w-full"
-          />
-        </div>
-      </section>
+  {/* Map */}
+<section className="max-w-4xl mx-auto mb-10">
+  <h3 className="text-xl font-semibold mb-4">Google Maps to Show Issue Locations</h3>
+  <div className="rounded shadow overflow-hidden">
+    <img
+      src="https://maps.googleapis.com/maps/api/staticmap?..."
+      alt="Map Placeholder"
+      className="w-full"
+    />
+  </div>
+</section>
+
 
       {/* Footer */}
       <footer className="text-center text-sm text-gray-700 mt-8">
-          © 2025 civicconect.com | Developed by Wasif & Laiba
-        </footer>
+        © 2025 civicconect.com | Developed by Wasif & Laiba
+      </footer>
     </main>
   );
 }

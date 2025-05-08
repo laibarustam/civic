@@ -40,12 +40,12 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-b from-[#E0F7FF] to-[#F9D5E5]">
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-b from-[#24428a] to-[#7888b0] text-white font-sans">
       <Link
         href="/"
         className="absolute top-8 left-8 flex items-center gap-2 text-gray-800 hover:text-blue-600 transition-colors"
       >
-        <FaArrowLeft className="text-xl" />
+        <FaArrowLeft className="text-white-800 " />
         <span>Back to Home</span>
       </Link>
 
