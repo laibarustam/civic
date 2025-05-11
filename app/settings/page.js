@@ -15,7 +15,7 @@ import {
 } from "firebase/storage";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { FaArrowLeft } from "react-icons/fa";
+import { FaArrowLeft, FaEdit } from "react-icons/fa";
 import Link from "next/link";
 
 export default function EditProfilePage() {
@@ -42,7 +42,16 @@ export default function EditProfilePage() {
         const userRef = doc(db, "user_admin", user.uid);
         const userSnap = await getDoc(userRef);
         if (userSnap.exists()) {
-          setUserData(userSnap.data());
+          const fetchedData = userSnap.data();
+          setUserData(fetchedData);
+
+          // If no image in Firestore, set default avatar
+          if (!fetchedData.profile_image) {
+            setUserData((prevState) => ({
+              ...prevState,
+              profile_image: "/default-avatar.png" // Default avatar URL
+            }));
+          }
         }
         setLoading(false);
       } else {
@@ -104,28 +113,30 @@ export default function EditProfilePage() {
 
         <h2 className="text-2xl font-bold text-center mb-6">Edit Profile</h2>
 
-        {/* 🔸 Image Preview */}
-        <div className="flex justify-center mb-4">
+        {/* 🔸 Image Preview with Edit Option */}
+        <div className="flex justify-center mb-4 relative">
           <Image
-            src={userData.profile_image || "/default-avatar.png"}
+            src={userData.profile_image || "/default-avatar.jpg"}
+           // Default avatar if no image
             alt="Profile"
             width={100}
             height={100}
             className="rounded-full border-2 border-indigo-500"
           />
+          <label htmlFor="image-upload" className="absolute bottom-0 right-0 bg-indigo-600 text-white rounded-full p-1 cursor-pointer">
+            <FaEdit className="text-sm" />
+          </label>
         </div>
+        <input
+          id="image-upload"
+          type="file"
+          onChange={handleImageChange}
+          className="hidden"
+        />
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* 🔹 File input for profile image */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Change Profile Image
-            </label>
-            <input type="file" onChange={handleImageChange} />
-          </div>
-
           {/* Other fields */}
-          {[
+          {[ 
             { name: "full_name", label: "Full Name" },
             { name: "email", label: "Email", disabled: true },
             { name: "phone", label: "Phone" },

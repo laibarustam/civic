@@ -16,7 +16,9 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { auth, db } from "/firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import { sendPasswordResetEmail } from "firebase/auth";
+import { doc, getDoc, deleteDoc } from "firebase/firestore";
+
 
 export default function ProfilePage() {
   const [userData, setUserData] = useState({
@@ -53,6 +55,40 @@ export default function ProfilePage() {
 
     return () => unsubscribe();
   }, []);
+
+  const handleChangePassword = async () => {
+  if (auth.currentUser?.email) {
+    try {
+      await sendPasswordResetEmail(auth, auth.currentUser.email);
+      alert("Password reset email sent!");
+    } catch (error) {
+      console.error("Error sending password reset email:", error);
+      alert("Failed to send reset email.");
+    }
+  }
+};
+
+const handleDeleteAccount = async () => {
+  const user = auth.currentUser;
+
+  if (!user) {
+    alert("User not authenticated.");
+    return;
+  }
+
+  const confirmed = confirm("Are you sure you want to delete your profile data? This cannot be undone.");
+  if (!confirmed) return;
+
+  try {
+    await deleteDoc(doc(db, "user_admin", user.uid));
+    alert("Account data deleted from Firestore.");
+    window.location.href = "/"; // or redirect to login
+  } catch (error) {
+    console.error("Error deleting Firestore document:", error);
+    alert("Failed to delete your account data.");
+  }
+};
+
 
   return (
     <div className="min-h-screen bg-[#f7f7f9] flex flex-col items-center p-8">
@@ -132,18 +168,27 @@ export default function ProfilePage() {
         <div className="bg-white w-full max-w-md p-6 rounded-2xl shadow-lg">
           <p className="text-sm font-semibold text-gray-700 mb-4">Actions</p>
           <ul className="space-y-4">
-            <li className="flex justify-between items-center cursor-pointer hover:text-blue-700 transition-all">
-              <span className="flex items-center gap-2">
-                <RiLockPasswordLine className="text-blue-600" /> Change Password
-              </span>
-              <span className="text-xl">&rarr;</span>
-            </li>
-            <li className="flex justify-between items-center text-rose-500 cursor-pointer hover:text-red-600 transition-all">
-              <span className="flex items-center gap-2">
-                <MdDelete className="text-rose-600" /> Delete Account
-              </span>
-              <span className="text-xl">&rarr;</span>
-            </li>
+            <li
+  onClick={handleChangePassword}
+  className="flex justify-between items-center cursor-pointer hover:text-blue-700 transition-all"
+>
+  <span className="flex items-center gap-2">
+    <RiLockPasswordLine className="text-blue-600" /> Change Password
+  </span>
+  <span className="text-xl">&rarr;</span>
+</li>
+
+<li
+  onClick={handleDeleteAccount}
+  className="flex justify-between items-center text-rose-500 cursor-pointer hover:text-red-600 transition-all"
+>
+  <span className="flex items-center gap-2">
+    <MdDelete className="text-rose-600" /> Delete Account
+  </span>
+  <span className="text-xl">&rarr;</span>
+</li>
+
+
           </ul>
         </div>
       </div>

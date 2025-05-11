@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { db } from '/firebase';
-import { collection, onSnapshot } from 'firebase/firestore';
+import { collection, onSnapshot, doc, deleteDoc } from 'firebase/firestore';
 import { FaUsers, FaUserShield, FaUserCheck, FaRegUser } from 'react-icons/fa';
 import ReportMap from '../components/ReportMap';
 
@@ -16,35 +16,67 @@ export default function UserPage() {
 
   useEffect(() => {
     const usersCollection = collection(db, 'users');
+    const adminsCollection = collection(db, 'user_admin');
 
-    const unsubscribe = onSnapshot(usersCollection, (snapshot) => {
-      const usersList = snapshot.docs.map((doc) => doc.data());
-      setUsers(usersList);
-      setTotalUsers(usersList.length);
-      setTotalAdmins(usersList.filter((user) => user.role === 'Admin').length);
-      setTotalOfficers(usersList.filter((user) => user.role === 'Officer').length);
-      setTotalCitizens(usersList.filter((user) => user.role === 'Citizen').length);
+    const unsubscribeUsers = onSnapshot(usersCollection, (snapshot) => {
+      const citizens = snapshot.docs.map((doc) => ({
+        ...doc.data(),
+        source: 'citizen',
+      }));
+
+      setUsers((prev) => {
+        const withoutCitizens = prev.filter((u) => u.source !== 'citizen');
+        return [...withoutCitizens, ...citizens];
+      });
+
+      setTotalCitizens(citizens.length);
     });
 
-    return () => unsubscribe();
+    const unsubscribeAdmins = onSnapshot(adminsCollection, (snapshot) => {
+      const adminUsers = snapshot.docs.map((doc) => ({
+        ...doc.data(),
+        source: 'admin',
+      }));
+
+      const admins = adminUsers.filter((user) => user.role === 'Admin');
+      const officers = adminUsers.filter((user) => user.role === 'Officer');
+
+      setUsers((prev) => {
+        const withoutAdmins = prev.filter((u) => u.source !== 'admin');
+        return [...withoutAdmins, ...adminUsers];
+      });
+
+      setTotalAdmins(admins.length);
+      setTotalOfficers(officers.length);
+    });
+
+    return () => {
+      unsubscribeUsers();
+      unsubscribeAdmins();
+    };
   }, []);
+
+  useEffect(() => {
+    setTotalUsers(users.length);
+  }, [users]);
 
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
       user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email?.toLowerCase().includes(searchTerm.toLowerCase());
+      user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.role?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesRole = roleFilter ? user.role === roleFilter : true;
 
     return matchesSearch && matchesRole;
   });
-// Just before return (
+
   const selectedLocation = users
-  .filter((user) => user.locations?.latitude && user.locations?.longitude)
-  .map((user) => ({
-    latitude: user.locations.latitude,
-    longitude: user.locations.longitude,
-  }));
+    .filter((user) => user.locations?.latitude && user.locations?.longitude)
+    .map((user) => ({
+      latitude: user.locations.latitude,
+      longitude: user.locations.longitude,
+    }));
 
   return (
     <main className="bg-[#f5f7fb] min-h-screen p-8">
@@ -54,7 +86,7 @@ export default function UserPage() {
       <section className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10 max-w-5xl mx-auto text-white text-center">
         <div className="bg-green-300 text-black py-6 rounded shadow hover:bg-green-400 hover:shadow-xl transform hover:scale-105 transition-all duration-300">
           <FaUsers className="text-4xl mb-4 mx-auto" />
-          <p className="text-lg font-semibold">Total User</p>
+          <p className="text-lg font-semibold">Total Users</p>
           <p className="text-xl font-bold">({totalUsers})</p>
         </div>
         <div className="bg-cyan-300 text-black py-6 rounded shadow hover:bg-cyan-400 hover:shadow-xl transform hover:scale-105 transition-all duration-300">
@@ -75,55 +107,43 @@ export default function UserPage() {
       </section>
 
       {/* Table */}
-      <section className="max-w-5xl mx-auto mb-12">
+      <div className="max-w-5xl mx-auto mb-12">
         <h3 className="text-xl font-semibold mb-4">User Management Table</h3>
         <div className="overflow-x-auto">
           <table className="w-full bg-white shadow border rounded text-sm">
             <thead className="bg-gray-100">
-              <tr className="text-left">
-                <th className="p-3">Serial no</th>
-                <th className="p-3">Name</th>
-                <th className="p-3">Email</th>
-                <th className="p-3">Role</th>
-                <th className="p-3">Location</th>
-                <th className="p-3">Actions</th>
+              <tr className="text-center">
+                <th className="p-3 border-r border-gray-300">Serial No</th>
+                <th className="p-3 border-r border-gray-300">Name</th>
+                <th className="p-3 border-r border-gray-300">Email</th>
+                <th className="p-3 border-r border-gray-300">Role</th>
               </tr>
             </thead>
             <tbody>
               {filteredUsers.map((user, index) => (
-                <tr key={index} className="border-t">
-                  <td className="p-3">{index + 1}</td>
-                  <td className="p-3">{user.full_name || 'N/A'}</td>
-                  <td className="p-3">{user.email}</td>
-                  <td className="p-3">{user.role}</td>
-                  <td className="p-3">{user.locations}</td>
-                  <td className="p-3 space-x-2">
-                    {user.status === 'Suspended' ? (
-                      <button className="text-green-600 font-medium">✔ Activate</button>
-                    ) : (
-                      <>
-                        <button className="text-blue-600 font-medium">✏ Edit</button>
-                        <button className="text-red-600 font-medium">❌ Delete</button>
-                      </>
-                    )}
-                  </td>
+                <tr key={user.id || index} className="border-t border-gray-300 text-center">
+                  <td className="p-3 border-r border-gray-300">{index + 1}</td>
+                  <td className="p-3 border-r border-gray-300">{user.full_name || 'N/A'}</td>
+                  <td className="p-3 border-r border-gray-300">{user.email}</td>
+                  <td className="p-3 border-r border-gray-300">{user.role}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+      </div>
 
-        {/* Search */}
-        <div className="flex items-center mt-6">
-          <input
-            type="text"
-            placeholder="Search by Name, EmailID"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="border p-2 rounded-l w-full"
-          />
-          <button className="bg-blue-600 text-white px-4 py-2 rounded-r">🔍</button>
-        </div>
+      {/* Search */}
+      <div className="flex items-center mt-6">
+        <input
+          type="text"
+          placeholder="Search by Name, EmailID"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="border p-2 rounded-l w-full"
+        />
+        <button className="bg-blue-600 text-white px-4 py-2 rounded-r">🔍</button>
+      </div>
 
         {/* Role Filter */}
         <div className="flex gap-4 mt-4">
@@ -144,9 +164,9 @@ export default function UserPage() {
             Officer
           </span>
           <span
-            onClick={() => setRoleFilter('Citizen')}
+            onClick={() => setRoleFilter('citizen')}
             className={`px-4 py-1 rounded cursor-pointer transition-all duration-300 ${
-              roleFilter === 'Citizen' ? 'bg-yellow-400' : 'bg-yellow-200 hover:bg-yellow-300 hover:shadow-lg transform hover:scale-105'
+              roleFilter === 'citizen' ? 'bg-yellow-400' : 'bg-yellow-200 hover:bg-yellow-300 hover:shadow-lg transform hover:scale-105'
             }`}
           >
             Citizen
@@ -158,7 +178,7 @@ export default function UserPage() {
             All
           </span>
         </div>
-      </section>
+
 
   {/* Map */}
     {/* Map Heatmap */}

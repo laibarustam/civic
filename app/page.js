@@ -121,7 +121,7 @@ export default function Welcome() {
                 <h3 className="text-xl font-semibold mb-3 text-black">
                   {card.title}
                 </h3>
-                <p className="text-black">{card.desc}</p>
+                <div className="text-black text-sm">{card.desc}</div>
               </div>
             ))}
           </div>
