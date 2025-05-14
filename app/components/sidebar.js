@@ -1,29 +1,36 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
-  FaTachometerAlt, FaTasks, FaChartLine, FaUsers, FaBell,
-  FaUserAlt, FaCog, FaSignOutAlt,
-} from 'react-icons/fa';
+  FaTachometerAlt,
+  FaTasks,
+  FaChartLine,
+  FaUsers,
+  FaUserAlt,
+  FaCog,
+  FaSignOutAlt,
+} from "react-icons/fa";
 
 const topLinks = [
-  { href: '/dashboard', label: 'Dashboard', icon: <FaTachometerAlt /> },
-  { href: '/task', label: 'Task', icon: <FaTasks /> },
-  { href: '/analytics', label: 'Analytics', icon: <FaChartLine /> },
-  { href: '/users', label: 'Users', icon: <FaUsers /> },
-  { href: '/notifications', label: 'Notifications', icon: <FaBell /> },
+  { href: "/dashboard", label: "Dashboard", icon: <FaTachometerAlt /> },
+  { href: "/task", label: "Task", icon: <FaTasks /> },
+  { href: "/analytics", label: "Analytics", icon: <FaChartLine /> },
+  { href: "/users", label: "Users", icon: <FaUsers /> },
 ];
 
 const bottomLinks = [
-  { href: '/profile', label: 'Profile', icon: <FaUserAlt /> },
-  { href: '/settings', label: 'Settings', icon: <FaCog /> },
-  { href: '/logout', label: 'Logout', icon: <FaSignOutAlt /> },
+  { href: "/profile", label: "Profile", icon: <FaUserAlt /> },
+  { href: "/settings", label: "Settings", icon: <FaCog /> },
+  { href: "/logout", label: "Logout", icon: <FaSignOutAlt /> },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const isAuthPage = pathname === '/login' || pathname === '/app' || pathname === '/forgetpassword';
+  const isAuthPage =
+    pathname === "/login" ||
+    pathname === "/app" ||
+    pathname === "/forgetpassword";
 
   if (isAuthPage) return null;
 
@@ -44,7 +51,9 @@ export default function Sidebar() {
               key={link.href}
               href={link.href}
               className={`p-2 rounded hover:bg-white hover:text-[#24428a] transition flex items-center gap-2 ${
-                pathname === link.href ? 'bg-white text-[#24428a] font-semibold' : ''
+                pathname === link.href
+                  ? "bg-white text-[#24428a] font-semibold"
+                  : ""
               }`}
             >
               {link.icon}
@@ -62,7 +71,9 @@ export default function Sidebar() {
               key={link.href}
               href={link.href}
               className={`p-2 rounded hover:bg-white hover:text-[#24428a] transition flex items-center gap-2 ${
-                pathname === link.href ? 'bg-white text-[#24428a] font-semibold' : ''
+                pathname === link.href
+                  ? "bg-white text-[#24428a] font-semibold"
+                  : ""
               }`}
             >
               {link.icon}
