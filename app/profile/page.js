@@ -11,7 +11,6 @@ import {
 } from "react-icons/fa";
 import { RiLockPasswordLine } from "react-icons/ri";
 import { MdDelete } from "react-icons/md";
-import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { auth, db } from "/firebase";
@@ -29,7 +28,6 @@ export default function ProfilePage() {
     rank: "",
     department: "",
     badge_number: "",
-    dp_url: null,
   });
 
   useEffect(() => {
@@ -102,15 +100,7 @@ export default function ProfilePage() {
 
       {/* Profile Card */}
       <div className="bg-white rounded-3xl shadow-lg p-8 w-full max-w-3xl flex flex-col items-center">
-        {/* Avatar + Name */}
-        <Image
-          src={userData.dp_url || "/default-avatar.png"}
-          width={100}
-          height={100}
-          alt="Profile Avatar"
-          className="rounded-full mb-4 border-4 border-indigo-500"
-          priority
-        />
+        {/* Name */}
         <h1 className="text-3xl font-semibold text-center text-gray-900">
           {userData.full_name}
         </h1>

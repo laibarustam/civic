@@ -18,8 +18,6 @@ import {
 } from "react-icons/fa";
 import Link from "next/link";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { FaImage } from "react-icons/fa";
-import { storage } from "/firebase";
 import { auth, db } from "/firebase";
 import {
   doc,
@@ -29,8 +27,6 @@ import {
   where,
   getDocs,
 } from "firebase/firestore";
-
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 
 export default function Home() {
   const {
@@ -42,9 +38,6 @@ export default function Home() {
   } = useForm();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [image, setImage] = useState(null);
-  const [imageURL, setImageURL] = useState("");
-
   const router = useRouter();
 
   const departments = [
@@ -83,93 +76,39 @@ export default function Home() {
       );
       const user = userCredential.user;
 
-      // If an image is uploaded, upload it to Firebase Storage
-      if (image) {
-        const storageRef = ref(storage, `user_images/${user.uid}`);
-        const uploadTask = uploadBytesResumable(storageRef, image);
+      // Store additional user data in Firestore
+      await setDoc(doc(db, "user_admin", user.uid), {
+        full_name: data.full_name,
+        email: data.email,
+        phone: data.phone,
+        city: data.city,
+        cnic: data.cnic,
+        rank: data.rank || "",
+        department: data.department || "",
+        badge_number: data.badge_number || "",
+        role: "citizen", // Default role
+        created_at: new Date().toISOString(),
+      });
 
-        uploadTask.on(
-          "state_changed",
-          (snapshot) => {},
-          (error) => {
-            console.error("Image upload failed:", error);
-            setIsSubmitting(false);
-          },
-          () => {
-            getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-              // Store additional user data in Firestore
-              setDoc(doc(db, "user_admin", user.uid), {
-                full_name: data.name,
-                email: data.email,
-                phone: data.phone,
-                rank: data.rank,
-                department: data.department,
-                badge_number: data.badgeNumber,
-                city: data.city,
-                cnic: data.cnic,
-                image_url: downloadURL, // Save the image URL
-                created_at: new Date().toISOString(),
-                role: "Admin",
-                status: "Active",
-              });
-              router.push("/login");
-            });
-          }
-        );
-      } else {
-        // If no image is uploaded, proceed to save user data without image
-        await setDoc(doc(db, "user_admin", user.uid), {
-          full_name: data.name,
-          email: data.email,
-          phone: data.phone,
-          rank: data.rank,
-          department: data.department,
-          badge_number: data.badgeNumber,
-          city: data.city,
-          cnic: data.cnic,
-          created_at: new Date().toISOString(),
-          role: "Admin",
-          status: "Active",
-        });
-        router.push("/login");
-      }
+      router.push("/login");
     } catch (error) {
+      console.error("Error during registration:", error);
       if (error.code === "auth/email-already-in-use") {
-        setError("email", { message: "Email is already in use" });
-      } else if (error.code === "auth/weak-password") {
-        setError("password", { message: "Password is too weak" });
+        setError("email", { message: "This email is already registered" });
       } else {
-        setError("password", {
-          message: "An error occurred. Please try again.",
-        });
+        // Handle other errors
+        alert("Registration failed. Please try again.");
       }
+    } finally {
       setIsSubmitting(false);
     }
   };
+
   // Function to check if user is at least 18 years old based on CNIC
   const validateAge = (cnic) => {
     const currentYear = new Date().getFullYear();
     const birthYear = parseInt("19" + cnic.substr(4, 2)); // Assuming year format in CNIC is YY
     return currentYear - birthYear >= 18;
-  };
-
-  // Handle image selection
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      // Validate file type
-      if (!["image/jpeg", "image/png", "image/jpg"].includes(file.type)) {
-        alert("Please upload only JPG or PNG images");
-        return;
-      }
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        alert("Image size should not exceed 5MB");
-        return;
-      }
-      setImage(file);
-      setImageURL(URL.createObjectURL(file));
-    }
   };
 
   return (
@@ -217,31 +156,6 @@ export default function Home() {
             </h1>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              {/* Image Upload */}
-              <div className="space-y-4">
-                <label className="text-sm text-gray-600 mb-1 block">
-                  Upload Profile Image
-                </label>
-                <div className="flex items-center gap-3 border rounded-lg p-2 focus-within:border-blue-500 transition">
-                  <FaImage className="text-gray-400" />
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="w-full border-none outline-none bg-transparent text-sm text-black"
-                  />
-                </div>
-                {image && (
-                  <div className="mt-2">
-                    <img
-                      src={imageURL}
-                      alt="Preview"
-                      className="w-32 h-32 object-cover rounded-full"
-                    />
-                  </div>
-                )}
-              </div>
-
               {/* Personal Information */}
               <div className="space-y-4">
                 <h3 className="font-semibold text-gray-700">

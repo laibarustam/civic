@@ -4,42 +4,38 @@ import { useState, useEffect } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "/firebase"; // Make sure this path is correct
 
-const COLORS = ["#3b82f6", "#9333ea", "#f97316", "#fbbf24"]; // Added yellow for "In Progress"
+const COLORS = ["#3b82f6", "#9333ea", "#f97316"]; // Adjusted colors for standardized statuses
 
 export default function AnalyticsChart() {
   const [chartData, setChartData] = useState([
-    { name: "done", value: 0 },
+    { name: "Solved", value: 0 },
     { name: "Pending", value: 0 },
-    { name: "Total", value: 0 },
-    { name: "In Progress", value: 0 },
+    { name: "Rejected", value: 0 },
   ]);
 
   useEffect(() => {
     const fetchData = async () => {
-      const querySnapshot = await getDocs(collection(db, "reports")); // Adjust collection name as per your Firestore setup
-      let resolved = 0;
+      const querySnapshot = await getDocs(collection(db, "reports"));
+      let solved = 0;
       let pending = 0;
-      let total = 0;
-      let inProgress = 0; // Added variable for inProgress
+      let rejected = 0;
 
       querySnapshot.forEach((doc) => {
-        total++;
-        const status = doc.data().status?.toLowerCase(); // Convert to lowercase for consistency
+        const status = doc.data().status?.toLowerCase();
 
         if (status === "solved") {
-          resolved++; // Increment resolved for "done" status
+          solved++;
         } else if (status === "pending") {
-          pending++; // Increment pending for "pending" status
-        } else if (status === "in progress") {
-          inProgress++; // Increment inProgress for "in progress" status
+          pending++;
+        } else if (status === "rejected") {
+          rejected++;
         }
       });
 
       setChartData([
-        { name: "done", value: resolved },
+        { name: "Solved", value: solved },
         { name: "Pending", value: pending },
-        { name: "Total", value: total },
-        { name: "In Progress", value: inProgress }, // Add In Progress status
+        { name: "Rejected", value: rejected },
       ]);
     };
 

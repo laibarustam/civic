@@ -15,9 +15,9 @@ import {
 export default function Analytics() {
   const [reportCounts, setReportCounts] = useState({
     total: 0,
-    resolved: 0,
+    solved: 0,
     pending: 0,
-    inProgress: 0,
+    rejected: 0,
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [usersPerPage] = useState(10);
@@ -31,18 +31,18 @@ export default function Analytics() {
         const snapshot = await getDocs(collection(db, "reports"));
         const total = snapshot.size;
 
-        let resolved = 0;
+        let solved = 0;
         let pending = 0;
-        let inProgress = 0;
+        let rejected = 0;
 
         snapshot.forEach((doc) => {
           const status = doc.data().status?.toLowerCase();
-          if (status === "solved") resolved++;
+          if (status === "solved") solved++;
           else if (status === "pending") pending++;
-          else if (status === "in progress") inProgress++;
+          else if (status === "rejected") rejected++;
         });
 
-        setReportCounts({ total, resolved, pending, inProgress });
+        setReportCounts({ total, solved, pending, rejected });
       } catch (err) {
         console.error("Error fetching reports:", err);
       }
@@ -92,8 +92,8 @@ export default function Analytics() {
         </div>
         <div className="bg-blue-200 p-6 rounded text-black flex items-center justify-center flex-col hover:bg-blue-300 hover:shadow-xl transform hover:scale-105 transition-all duration-300">
           <FaCheckCircle className="text-4xl mb-4" />
-          <h3 className="text-lg font-bold">Resolved Reports</h3>
-          <p className="text-3xl font-semibold mt-2">{reportCounts.resolved}</p>
+          <h3 className="text-lg font-bold">Solved Reports</h3>
+          <p className="text-3xl font-semibold mt-2">{reportCounts.solved}</p>
         </div>
         <div className="bg-yellow-200 p-6 rounded text-black flex items-center justify-center flex-col hover:bg-yellow-300 hover:shadow-xl transform hover:scale-105 transition-all duration-300">
           <FaExclamationTriangle className="text-4xl mb-4" />
@@ -102,10 +102,8 @@ export default function Analytics() {
         </div>
         <div className="bg-orange-200 p-6 rounded text-black flex items-center justify-center flex-col hover:bg-orange-300 hover:shadow-xl transform hover:scale-105 transition-all duration-300">
           <FaExclamationTriangle className="text-4xl mb-4" />
-          <h3 className="text-lg font-bold">In Progress Reports</h3>
-          <p className="text-3xl font-semibold mt-2">
-            {reportCounts.inProgress}
-          </p>
+          <h3 className="text-lg font-bold">Rejected Reports</h3>
+          <p className="text-3xl font-semibold mt-2">{reportCounts.rejected}</p>
         </div>
       </div>
 
@@ -127,7 +125,7 @@ export default function Analytics() {
           </div>
           <div className="flex items-center">
             <span className="w-3 h-3 bg-blue-500 rounded-full mr-2" />{" "}
-            <span className="text-black">Resolved</span>
+            <span className="text-black">Solved</span>
           </div>
           <div className="flex items-center">
             <span className="w-3 h-3 bg-purple-500 rounded-full mr-2" />{" "}
@@ -135,7 +133,7 @@ export default function Analytics() {
           </div>
           <div className="flex items-center">
             <span className="w-3 h-3 bg-yellow-500 rounded-full mr-2" />{" "}
-            <span className="text-black">In Progress</span>
+            <span className="text-black">Rejected</span>
           </div>
         </div>
       </section>

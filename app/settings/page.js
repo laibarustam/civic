@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import {
   FaArrowLeft,
   FaUser,
@@ -11,7 +10,6 @@ import {
   FaIdCard,
   FaEnvelope,
 } from "react-icons/fa";
-import { uploadProfilePicture } from "@/utils/uploadHelpers";
 import { auth, db } from "/firebase";
 import { doc, updateDoc } from "firebase/firestore";
 
@@ -25,8 +23,6 @@ export default function SettingsPage() {
   });
 
   const [isUpdating, setIsUpdating] = useState(false);
-  const [imageFile, setImageFile] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState("/image1.jpg");
 
   const handleChange = (e) => {
     setFormData({
@@ -41,16 +37,9 @@ export default function SettingsPage() {
       const user = auth.currentUser;
       if (!user) throw new Error("No authenticated user");
 
-      let dpUrl = null;
-      if (imageFile) {
-        // Upload to Supabase and get public URL
-        dpUrl = await uploadProfilePicture(imageFile, user.uid);
-      }
-
       const userRef = doc(db, "user_admin", user.uid);
       const updateData = {
         ...formData,
-        ...(dpUrl && { dp_url: dpUrl }), // Only update dp_url if there's a new image
       };
 
       await updateDoc(userRef, updateData);
@@ -60,14 +49,6 @@ export default function SettingsPage() {
       alert("Error updating profile. Please try again.");
     } finally {
       setIsUpdating(false);
-    }
-  };
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImageFile(file);
-      setPreviewUrl(URL.createObjectURL(file));
     }
   };
 
@@ -82,30 +63,6 @@ export default function SettingsPage() {
 
       {/* Settings Card */}
       <div className="bg-white rounded-3xl shadow-lg p-8 w-full max-w-3xl flex flex-col items-center">
-        {/* Avatar */}
-        <div className="relative">
-          <Image
-            src={previewUrl}
-            width={100}
-            height={100}
-            alt="Avatar"
-            className="rounded-full mb-8 border-4 border-indigo-500"
-          />
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
-            className="hidden"
-            id="profile-image-input"
-          />
-          <label
-            htmlFor="profile-image-input"
-            className="absolute bottom-8 right-0 bg-indigo-600 text-white p-2 rounded-full cursor-pointer hover:bg-indigo-700 transition"
-          >
-            <FaUser className="text-sm" />
-          </label>
-        </div>
-
         {/* Form Section */}
         <div className="bg-white w-full max-w-md p-6 rounded-2xl mb-6 shadow-lg space-y-6">
           <p className="text-sm font-semibold text-gray-600 mb-4">

@@ -19,7 +19,7 @@ export default function TaskPage() {
   const [selectedReport, setSelectedReport] = useState(null);
   const [department, setDepartment] = useState("");
   const [instruction, setInstruction] = useState("");
-  const [status, setStatus] = useState("In Progress");
+  const [status, setStatus] = useState("pending");
   const [loading, setLoading] = useState(true);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -197,14 +197,14 @@ export default function TaskPage() {
   };
 
   const handleMarkDone = async (task) => {
-    await updateDoc(doc(db, "reports", task.id), { status: "Resolved" });
+    await updateDoc(doc(db, "reports", task.id), { status: "solved" });
     await setDoc(doc(db, "task_history", task.id), {
       ...task,
-      status: "Resolved",
+      status: "solved",
       completedAt: new Date(),
       timestamp: new Date(),
     });
-    alert("Task marked as Done!");
+    alert("Task marked as solved!");
   };
 
   const handleEditTask = (task) => {
@@ -370,9 +370,9 @@ export default function TaskPage() {
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
               >
-                <option value="Pending">Pending</option>
-                <option value="In Progress">In Progress</option>
-                <option value="Resolved">Resolved</option>
+                <option value="pending">Pending</option>
+                <option value="solved">Solved</option>
+                <option value="rejected">Rejected</option>
               </select>
             </div>
             <input
@@ -426,9 +426,9 @@ export default function TaskPage() {
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
               >
-                <option value="Pending">Pending</option>
-                <option value="In Progress">In Progress</option>
-                <option value="Resolved">Resolved</option>
+                <option value="pending">Pending</option>
+                <option value="solved">Solved</option>
+                <option value="rejected">Rejected</option>
               </select>
             </div>
             <input
@@ -593,7 +593,7 @@ export default function TaskPage() {
                         className={`px-2 py-1 rounded-full text-xs font-semibold ${
                           report.status?.toLowerCase() === "solved"
                             ? "bg-green-100 text-green-800"
-                            : report.status?.toLowerCase() === "in progress"
+                            : report.status?.toLowerCase() === "pending"
                             ? "bg-yellow-100 text-yellow-800"
                             : "bg-red-100 text-red-800"
                         }`}

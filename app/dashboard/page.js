@@ -5,6 +5,7 @@ import {
   FaChartBar,
   FaCheckCircle,
   FaExclamationTriangle,
+  FaExclamationCircle,
 } from "react-icons/fa";
 import { useState, useEffect } from "react";
 import { auth, db } from "/firebase";
@@ -107,8 +108,8 @@ export default function Home() {
     (r) => r.status && r.status.toLowerCase() === "pending"
   ).length;
 
-  const inProgressReports = reports.filter(
-    (r) => r.status && r.status.toLowerCase() === "in progress"
+  const rejectedReports = reports.filter(
+    (r) => r.status && r.status.toLowerCase() === "rejected"
   ).length;
 
   return (
@@ -144,7 +145,7 @@ export default function Home() {
           </div>
           <div className="bg-blue-200 p-6 rounded text-black flex items-center justify-center flex-col hover:bg-blue-300 hover:shadow-xl transform hover:scale-105 transition-all duration-300">
             <FaCheckCircle className="text-4xl mb-4" />
-            <h3 className="text-lg font-bold">Resolved Reports</h3>
+            <h3 className="text-lg font-bold">Solved Reports</h3>
             <p className="text-3xl font-semibold mt-2">{resolvedReports}</p>
           </div>
           <div className="bg-yellow-200 p-6 rounded text-black flex items-center justify-center flex-col hover:bg-yellow-300 hover:shadow-xl transform hover:scale-105 transition-all duration-300">
@@ -152,10 +153,10 @@ export default function Home() {
             <h3 className="text-lg font-bold">Pending Reports</h3>
             <p className="text-3xl font-semibold mt-2">{pendingReports}</p>
           </div>
-          <div className="bg-orange-200 p-6 rounded text-black flex items-center justify-center flex-col hover:bg-orange-300 hover:shadow-xl transform hover:scale-105 transition-all duration-300">
-            <FaExclamationTriangle className="text-4xl mb-4" />
-            <h3 className="text-lg font-bold">In Progress Reports</h3>
-            <p className="text-3xl font-semibold mt-2">{inProgressReports}</p>
+          <div className="bg-red-200 p-6 rounded text-black flex items-center justify-center flex-col hover:bg-red-300 hover:shadow-xl transform hover:scale-105 transition-all duration-300">
+            <FaExclamationCircle className="text-4xl mb-4" />
+            <h3 className="text-lg font-bold">Rejected Reports</h3>
+            <p className="text-3xl font-semibold mt-2">{rejectedReports}</p>
           </div>
         </div>
 
