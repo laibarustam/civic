@@ -1,9 +1,9 @@
-'use client';
-import { useEffect, useState } from 'react';
-import { db } from '/firebase';
-import { collection, onSnapshot, doc, deleteDoc } from 'firebase/firestore';
-import { FaUsers, FaUserShield, FaUserCheck, FaRegUser } from 'react-icons/fa';
-import ReportMap from '../components/ReportMap';
+"use client";
+import { useEffect, useState } from "react";
+import { db } from "/firebase";
+import { collection, onSnapshot, doc, deleteDoc } from "firebase/firestore";
+import { FaUsers, FaUserShield, FaUserCheck, FaRegUser } from "react-icons/fa";
+import ReportMap from "../components/ReportMap";
 
 export default function UserPage() {
   const [users, setUsers] = useState([]);
@@ -11,21 +11,21 @@ export default function UserPage() {
   const [totalAdmins, setTotalAdmins] = useState(0);
   const [totalOfficers, setTotalOfficers] = useState(0);
   const [totalCitizens, setTotalCitizens] = useState(0);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [roleFilter, setRoleFilter] = useState("");
 
   useEffect(() => {
-    const usersCollection = collection(db, 'users');
-    const adminsCollection = collection(db, 'user_admin');
+    const usersCollection = collection(db, "users");
+    const adminsCollection = collection(db, "user_admin");
 
     const unsubscribeUsers = onSnapshot(usersCollection, (snapshot) => {
       const citizens = snapshot.docs.map((doc) => ({
         ...doc.data(),
-        source: 'citizen',
+        source: "citizen",
       }));
 
       setUsers((prev) => {
-        const withoutCitizens = prev.filter((u) => u.source !== 'citizen');
+        const withoutCitizens = prev.filter((u) => u.source !== "citizen");
         return [...withoutCitizens, ...citizens];
       });
 
@@ -35,14 +35,14 @@ export default function UserPage() {
     const unsubscribeAdmins = onSnapshot(adminsCollection, (snapshot) => {
       const adminUsers = snapshot.docs.map((doc) => ({
         ...doc.data(),
-        source: 'admin',
+        source: "admin",
       }));
 
-      const admins = adminUsers.filter((user) => user.role === 'Admin');
-      const officers = adminUsers.filter((user) => user.role === 'Officer');
+      const admins = adminUsers.filter((user) => user.role === "Admin");
+      const officers = adminUsers.filter((user) => user.role === "Officer");
 
       setUsers((prev) => {
-        const withoutAdmins = prev.filter((u) => u.source !== 'admin');
+        const withoutAdmins = prev.filter((u) => u.source !== "admin");
         return [...withoutAdmins, ...adminUsers];
       });
 
@@ -80,7 +80,9 @@ export default function UserPage() {
 
   return (
     <main className="bg-[#f5f7fb] min-h-screen p-8">
-      <h2 className="text-2xl font-semibold text-center mb-6">Civic Connect - User Management Panel</h2>
+      <h2 className="text-2xl font-semibold text-center mb-6 text-black">
+        Civic Connect - User Management Panel
+      </h2>
 
       {/* Cards */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10 max-w-5xl mx-auto text-white text-center">
@@ -108,11 +110,14 @@ export default function UserPage() {
 
       {/* Table */}
       <div className="max-w-5xl mx-auto mb-12">
-        <h3 className="text-xl font-semibold mb-4">User Management Table</h3>
+        <h3 className="text-xl font-semibold mb-4 text-black">
+          User Management Table
+        </h3>
         <div className="overflow-x-auto">
           <table className="w-full bg-white shadow border rounded text-sm">
+            {" "}
             <thead className="bg-gray-100">
-              <tr className="text-center">
+              <tr className="text-center text-black">
                 <th className="p-3 border-r border-gray-300">Serial No</th>
                 <th className="p-3 border-r border-gray-300">Name</th>
                 <th className="p-3 border-r border-gray-300">Email</th>
@@ -120,10 +125,16 @@ export default function UserPage() {
               </tr>
             </thead>
             <tbody>
+              {" "}
               {filteredUsers.map((user, index) => (
-                <tr key={user.id || index} className="border-t border-gray-300 text-center">
+                <tr
+                  key={user.id || index}
+                  className="border-t border-gray-300 text-center text-black"
+                >
                   <td className="p-3 border-r border-gray-300">{index + 1}</td>
-                  <td className="p-3 border-r border-gray-300">{user.full_name || 'N/A'}</td>
+                  <td className="p-3 border-r border-gray-300">
+                    {user.full_name || "N/A"}
+                  </td>
                   <td className="p-3 border-r border-gray-300">{user.email}</td>
                   <td className="p-3 border-r border-gray-300">{user.role}</td>
                 </tr>
@@ -138,61 +149,67 @@ export default function UserPage() {
         <input
           type="text"
           placeholder="Search by Name, EmailID"
+          className="border p-2 rounded-l w-full text-black"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="border p-2 rounded-l w-full"
         />
-        <button className="bg-blue-600 text-white px-4 py-2 rounded-r">🔍</button>
+        <button className="bg-blue-600 text-white px-4 py-2 rounded-r">
+          🔍
+        </button>
       </div>
 
-        {/* Role Filter */}
-        <div className="flex gap-4 mt-4">
-          <span
-            onClick={() => setRoleFilter('Admin')}
-            className={`px-4 py-1 rounded cursor-pointer transition-all duration-300 ${
-              roleFilter === 'Admin' ? 'bg-red-400' : 'bg-red-200 hover:bg-red-300 hover:shadow-lg transform hover:scale-105'
-            }`}
-          >
-            Admin
-          </span>
-          <span
-            onClick={() => setRoleFilter('Officer')}
-            className={`px-4 py-1 rounded cursor-pointer transition-all duration-300 ${
-              roleFilter === 'Officer' ? 'bg-green-400' : 'bg-green-200 hover:bg-green-300 hover:shadow-lg transform hover:scale-105'
-            }`}
-          >
-            Officer
-          </span>
-          <span
-            onClick={() => setRoleFilter('citizen')}
-            className={`px-4 py-1 rounded cursor-pointer transition-all duration-300 ${
-              roleFilter === 'citizen' ? 'bg-yellow-400' : 'bg-yellow-200 hover:bg-yellow-300 hover:shadow-lg transform hover:scale-105'
-            }`}
-          >
-            Citizen
-          </span>
-          <span
-            onClick={() => setRoleFilter('')}
-            className="px-4 py-1 rounded cursor-pointer bg-gray-200 hover:bg-gray-300 hover:shadow-lg transform hover:scale-105 transition-all duration-300"
-          >
-            All
-          </span>
-        </div>
+      {/* Role Filter */}
+      <div className="flex gap-4 mt-4">
+        <span
+          onClick={() => setRoleFilter("Admin")}
+          className={`px-4 py-1 rounded cursor-pointer transition-all duration-300 ${
+            roleFilter === "Admin"
+              ? "bg-red-800"
+              : "bg-red-500 hover:bg-red-600 hover:shadow-lg transform hover:scale-105"
+          }`}
+        >
+          Admin
+        </span>
+        <span
+          onClick={() => setRoleFilter("Officer")}
+          className={`px-4 py-1 rounded cursor-pointer transition-all duration-300 ${
+            roleFilter === "Officer"
+              ? "bg-green-800"
+              : "bg-green-600 hover:bg-green-500 hover:shadow-lg transform hover:scale-105"
+          }`}
+        >
+          Officer
+        </span>
+        <span
+          onClick={() => setRoleFilter("citizen")}
+          className={`px-4 py-1 rounded cursor-pointer transition-all duration-300 ${
+            roleFilter === "citizen"
+              ? "bg-yellow-800"
+              : "bg-yellow-500 hover:bg-yellow-600 hover:shadow-lg transform hover:scale-105"
+          }`}
+        >
+          Citizen
+        </span>
+        <span
+          onClick={() => setRoleFilter("")}
+          className="px-4 py-1 rounded cursor-pointer bg-gray-600 hover:bg-gray-500 hover:shadow-lg transform hover:scale-105 transition-all duration-300"
+        >
+          All
+        </span>
+      </div>
 
-
-  {/* Map */}
-    {/* Map Heatmap */}
-    <div className="max-w-5xl mx-auto mb-10">
+      {/* Map */}
+      {/* Map Heatmap
+      <div className="max-w-5xl mx-auto mb-10">
         <h3 className="text-xl font-semibold mb-4">User Locations on Map</h3>
         <div className="rounded shadow overflow-hidden">
           <ReportMap selectedLocation={selectedLocation} />
         </div>
-      </div>
-
+      </div> */}
 
       {/* Footer */}
       <footer className="text-center text-sm text-gray-700 mt-8">
-        © 2025 civicconect.com | Developed by Wasif & Laiba
+        © 2025 Civic Connect | Developed by Wasif & Laiba
       </footer>
     </main>
   );

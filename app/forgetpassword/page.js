@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { FaEnvelope, FaArrowLeft } from 'react-icons/fa';
-import Link from 'next/link';
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { FaEnvelope, FaArrowLeft } from "react-icons/fa";
+import Link from "next/link";
 
 export default function ForgetPasswordPage() {
   const {
@@ -20,7 +20,10 @@ export default function ForgetPasswordPage() {
   return (
     <div className="min-h-screen bg-[#f5f5f5] flex flex-col items-center justify-center p-6">
       {/* Back to Home Arrow outside the card */}
-      <Link href="/" className="absolute top-8 left-8 text-xl text-gray-800 hover:text-black">
+      <Link
+        href="/"
+        className="absolute top-8 left-8 text-xl text-gray-800 hover:text-black"
+      >
         <FaArrowLeft />
       </Link>
 
@@ -34,14 +37,16 @@ export default function ForgetPasswordPage() {
             <input
               type="email"
               placeholder="Email"
-              {...register('email', {
-                required: 'Email is required',
+              {...register("email", {
+                required: "Email is required",
                 pattern: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/,
               })}
-              className="w-full border-none outline-none bg-transparent text-sm"
+              className="w-full border-none outline-none bg-transparent text-sm text-black"
             />
           </div>
-          {errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
+          {errors.email && (
+            <p className="text-red-500 text-sm">{errors.email.message}</p>
+          )}
 
           {/* Submit Button */}
           <button
@@ -53,7 +58,7 @@ export default function ForgetPasswordPage() {
         </form>
 
         <p className="mt-4 text-sm text-center">
-          Remembered your password?{' '}
+          Remembered your password?{" "}
           <Link href="/login" className="text-blue-600 hover:underline">
             Login
           </Link>

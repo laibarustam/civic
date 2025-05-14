@@ -25,7 +25,6 @@ import { doc, setDoc } from "firebase/firestore";
 
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 
-
 export default function Home() {
   const {
     register,
@@ -66,89 +65,89 @@ export default function Home() {
       );
       const user = userCredential.user;
 
+      // If an image is uploaded, upload it to Firebase Storage
+      if (image) {
+        const storageRef = ref(storage, `user_images/${user.uid}`);
+        const uploadTask = uploadBytesResumable(storageRef, image);
 
-    // If an image is uploaded, upload it to Firebase Storage
-    if (image) {
-      const storageRef = ref(storage, `user_images/${user.uid}`);
-      const uploadTask = uploadBytesResumable(storageRef, image);
+        uploadTask.on(
+          "state_changed",
+          (snapshot) => {},
+          (error) => {
+            console.error("Image upload failed:", error);
+            setIsSubmitting(false);
+          },
+          () => {
+            getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+              // Store additional user data in Firestore
+              setDoc(doc(db, "user_admin", user.uid), {
+                full_name: data.name,
+                email: data.email,
+                phone: data.phone,
+                rank: data.rank,
+                department: data.department,
+                badge_number: data.badgeNumber,
+                city: data.city,
+                cnic: data.cnic,
+                image_url: downloadURL, // Save the image URL
+                created_at: new Date().toISOString(),
+                role: "Admin",
+                status: "Active",
+              });
+              router.push("/login");
+            });
+          }
+        );
+      } else {
+        // If no image is uploaded, proceed to save user data without image
+        await setDoc(doc(db, "user_admin", user.uid), {
+          full_name: data.name,
+          email: data.email,
+          phone: data.phone,
+          rank: data.rank,
+          department: data.department,
+          badge_number: data.badgeNumber,
+          city: data.city,
+          cnic: data.cnic,
+          created_at: new Date().toISOString(),
+          role: "Admin",
+          status: "Active",
+        });
+        router.push("/login");
+      }
+    } catch (error) {
+      if (error.code === "auth/email-already-in-use") {
+        setError("email", { message: "Email is already in use" });
+      } else if (error.code === "auth/weak-password") {
+        setError("password", { message: "Password is too weak" });
+      } else {
+        setError("password", {
+          message: "An error occurred. Please try again.",
+        });
+      }
+      setIsSubmitting(false);
+    }
+  };
 
-      uploadTask.on(
-        "state_changed",
-        (snapshot) => {},
-        (error) => {
-          console.error("Image upload failed:", error);
-          setIsSubmitting(false);
-        },
-        () => {
-          getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-            // Store additional user data in Firestore
-            setDoc(doc(db, "user_admin", user.uid), {
-        full_name: data.name,
-        email: data.email,
-        phone: data.phone,
-        rank: data.rank,
-        department: data.department,
-        badge_number: data.badgeNumber,
-        city: data.city,
-        cnic: data.cnic,
-        image_url: downloadURL, // Save the image URL
-        created_at: new Date().toISOString(),
-        role: "Admin",
-        status: "Active",
-      });
-      router.push("/login");
-    });
-  }
-);
-} else {
-// If no image is uploaded, proceed to save user data without image
-await setDoc(doc(db, "user_admin", user.uid), {
-  full_name: data.name,
-  email: data.email,
-  phone: data.phone,
-  rank: data.rank,
-  department: data.department,
-  badge_number: data.badgeNumber,
-  city: data.city,
-  cnic: data.cnic,
-  created_at: new Date().toISOString(),
-  role: "Admin",
-  status: "Active",
-});
-router.push("/login");
-}
-} catch (error) {
-if (error.code === "auth/email-already-in-use") {
-setError("email", { message: "Email is already in use" });
-} else if (error.code === "auth/weak-password") {
-setError("password", { message: "Password is too weak" });
-} else {
-setError("password", {
-  message: "An error occurred. Please try again.",
-});
-}
-setIsSubmitting(false);
-}
-};
+  // Handle image selection
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImage(file);
+      setImageURL(URL.createObjectURL(file)); // Display the selected image
+    }
+  };
 
-// Handle image selection
-const handleImageChange = (e) => {
-const file = e.target.files[0];
-if (file) {
-setImage(file);
-setImageURL(URL.createObjectURL(file)); // Display the selected image 
-}
-};
-
-return (
-<div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-br from-[#24428a] to-[#7888b0]"> <Link
-href="/"
-className="absolute top-8 left-8 flex items-center gap-2 text-gray-800 hover:text-blue-600 transition-colors"
->
-<FaArrowLeft className="text-xl" />
-<span>Back to Home</span>
-</Link>
-
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-br from-[#24428a] to-[#7888b0]">
+      {" "}
+      <Link
+        href="/"
+        className="absolute top-8 left-8 flex items-center gap-2 text-gray-800 hover:text-blue-600 transition-colors"
+      >
+        <FaArrowLeft className="text-xl" />
+        <span>Back to Home</span>
+      </Link>
       <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-4xl">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Left side - Welcome Content */}
@@ -183,39 +182,38 @@ className="absolute top-8 left-8 flex items-center gap-2 text-gray-800 hover:tex
               Create Your Account
             </h1>
 
-
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               {/* Image Upload */}
-<div className="space-y-4">
-  <label className="text-sm text-gray-600 mb-1 block">
-    Upload Profile Image
-  </label>
-  <div className="flex items-center gap-3 border rounded-lg p-2 focus-within:border-blue-500 transition">
-    <FaImage className="text-gray-400" />
-    <input
-      type="file"
-      accept="image/*"
-      onChange={handleImageChange}
-      className="w-full border-none outline-none bg-transparent text-sm"
-    />
-  </div>
-  {image && (
-    <div className="mt-2">
-      <img
-        src={imageURL}
-        alt="Preview"
-        className="w-32 h-32 object-cover rounded-full"
-      />
-    </div>
-  )}
-</div>
+              <div className="space-y-4">
+                <label className="text-sm text-gray-600 mb-1 block">
+                  Upload Profile Image
+                </label>
+                <div className="flex items-center gap-3 border rounded-lg p-2 focus-within:border-blue-500 transition">
+                  <FaImage className="text-gray-400" />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="w-full border-none outline-none bg-transparent text-sm text-black"
+                  />
+                </div>
+                {image && (
+                  <div className="mt-2">
+                    <img
+                      src={imageURL}
+                      alt="Preview"
+                      className="w-32 h-32 object-cover rounded-full"
+                    />
+                  </div>
+                )}
+              </div>
 
               {/* Personal Information */}
               <div className="space-y-4">
                 <h3 className="font-semibold text-gray-700">
                   Personal Information
                 </h3>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm text-gray-600 mb-1 block">
@@ -227,7 +225,7 @@ className="absolute top-8 left-8 flex items-center gap-2 text-gray-800 hover:tex
                         type="text"
                         placeholder="Full Name"
                         {...register("name", { required: "Name is required" })}
-                        className="w-full border-none outline-none bg-transparent text-sm"
+                        className="w-full border-none outline-none bg-transparent text-sm text-black"
                       />
                     </div>
                     {errors.name && (
@@ -254,7 +252,7 @@ className="absolute top-8 left-8 flex items-center gap-2 text-gray-800 hover:tex
                             message: "Invalid email address",
                           },
                         })}
-                        className="w-full border-none outline-none bg-transparent text-sm"
+                        className="w-full border-none outline-none bg-transparent text-sm text-black"
                       />
                     </div>
                     {errors.email && (
@@ -264,8 +262,6 @@ className="absolute top-8 left-8 flex items-center gap-2 text-gray-800 hover:tex
                     )}
                   </div>
                 </div>
-              
-                
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -280,7 +276,7 @@ className="absolute top-8 left-8 flex items-center gap-2 text-gray-800 hover:tex
                         {...register("phone", {
                           required: "Phone number is required",
                         })}
-                        className="w-full border-none outline-none bg-transparent text-sm"
+                        className="w-full border-none outline-none bg-transparent text-sm text-black"
                       />
                     </div>
                     {errors.phone && (
@@ -306,7 +302,7 @@ className="absolute top-8 left-8 flex items-center gap-2 text-gray-800 hover:tex
                             message: "CNIC must be in format: 00000-0000000-0",
                           },
                         })}
-                        className="w-full border-none outline-none bg-transparent text-sm"
+                        className="w-full border-none outline-none bg-transparent text-sm text-black"
                       />
                     </div>
                     {errors.cnic && (
@@ -334,7 +330,7 @@ className="absolute top-8 left-8 flex items-center gap-2 text-gray-800 hover:tex
                         type="text"
                         placeholder="Rank"
                         {...register("rank", { required: "Rank is required" })}
-                        className="w-full border-none outline-none bg-transparent text-sm"
+                        className="w-full border-none outline-none bg-transparent text-sm text-black"
                       />
                     </div>
                     {errors.rank && (
@@ -354,7 +350,7 @@ className="absolute top-8 left-8 flex items-center gap-2 text-gray-800 hover:tex
                         {...register("department", {
                           required: "Department is required",
                         })}
-                        className="w-full border-none outline-none bg-transparent text-sm"
+                        className="w-full border-none outline-none bg-transparent text-sm text-black"
                       >
                         <option value="">Select Department</option>
                         {departments.map((dept) => (
@@ -385,7 +381,7 @@ className="absolute top-8 left-8 flex items-center gap-2 text-gray-800 hover:tex
                         {...register("badgeNumber", {
                           required: "Badge Number/Office ID is required",
                         })}
-                        className="w-full border-none outline-none bg-transparent text-sm"
+                        className="w-full border-none outline-none bg-transparent text-sm text-black"
                       />
                     </div>
                     {errors.badgeNumber && (
@@ -405,7 +401,7 @@ className="absolute top-8 left-8 flex items-center gap-2 text-gray-800 hover:tex
                         type="text"
                         placeholder="City"
                         {...register("city", { required: "City is required" })}
-                        className="w-full border-none outline-none bg-transparent text-sm"
+                        className="w-full border-none outline-none bg-transparent text-sm text-black"
                       />
                     </div>
                     {errors.city && (
@@ -437,7 +433,7 @@ className="absolute top-8 left-8 flex items-center gap-2 text-gray-800 hover:tex
                             message: "Password must be at least 6 characters",
                           },
                         })}
-                        className="w-full border-none outline-none bg-transparent text-sm"
+                        className="w-full border-none outline-none bg-transparent text-sm text-black"
                       />
                     </div>
                     {errors.password && (
@@ -462,7 +458,7 @@ className="absolute top-8 left-8 flex items-center gap-2 text-gray-800 hover:tex
                             value === watch("password") ||
                             "Passwords do not match",
                         })}
-                        className="w-full border-none outline-none bg-transparent text-sm"
+                        className="w-full border-none outline-none bg-transparent text-sm text-black"
                       />
                     </div>
                     {errors.confirmPassword && (
@@ -495,7 +491,6 @@ className="absolute top-8 left-8 flex items-center gap-2 text-gray-800 hover:tex
           </div>
         </div>
       </div>
-      </div>
-      
+    </div>
   );
 }

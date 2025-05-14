@@ -19,7 +19,6 @@ import { onAuthStateChanged } from "firebase/auth";
 import { sendPasswordResetEmail } from "firebase/auth";
 import { doc, getDoc, deleteDoc } from "firebase/firestore";
 
-
 export default function ProfilePage() {
   const [userData, setUserData] = useState({
     full_name: "",
@@ -30,23 +29,24 @@ export default function ProfilePage() {
     rank: "",
     department: "",
     badge_number: "",
+    dp_url: null,
   });
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        console.log("User is logged in:", user.uid);  // Debug log
+        console.log("User is logged in:", user.uid); // Debug log
         try {
           // Fetching user data from Firestore
           const userDoc = await getDoc(doc(db, "user_admin", user.uid));
           if (userDoc.exists()) {
-            console.log("User data fetched:", userDoc.data());  // Debug log
+            console.log("User data fetched:", userDoc.data()); // Debug log
             setUserData(userDoc.data());
           } else {
             console.log("No user document found");
           }
         } catch (error) {
-          console.error("Error fetching user data:", error);  // Error log
+          console.error("Error fetching user data:", error); // Error log
         }
       } else {
         console.log("User not logged in");
@@ -57,38 +57,39 @@ export default function ProfilePage() {
   }, []);
 
   const handleChangePassword = async () => {
-  if (auth.currentUser?.email) {
-    try {
-      await sendPasswordResetEmail(auth, auth.currentUser.email);
-      alert("Password reset email sent!");
-    } catch (error) {
-      console.error("Error sending password reset email:", error);
-      alert("Failed to send reset email.");
+    if (auth.currentUser?.email) {
+      try {
+        await sendPasswordResetEmail(auth, auth.currentUser.email);
+        alert("Password reset email sent!");
+      } catch (error) {
+        console.error("Error sending password reset email:", error);
+        alert("Failed to send reset email.");
+      }
     }
-  }
-};
+  };
 
-const handleDeleteAccount = async () => {
-  const user = auth.currentUser;
+  const handleDeleteAccount = async () => {
+    const user = auth.currentUser;
 
-  if (!user) {
-    alert("User not authenticated.");
-    return;
-  }
+    if (!user) {
+      alert("User not authenticated.");
+      return;
+    }
 
-  const confirmed = confirm("Are you sure you want to delete your profile data? This cannot be undone.");
-  if (!confirmed) return;
+    const confirmed = confirm(
+      "Are you sure you want to delete your profile data? This cannot be undone."
+    );
+    if (!confirmed) return;
 
-  try {
-    await deleteDoc(doc(db, "user_admin", user.uid));
-    alert("Account data deleted from Firestore.");
-    window.location.href = "/"; // or redirect to login
-  } catch (error) {
-    console.error("Error deleting Firestore document:", error);
-    alert("Failed to delete your account data.");
-  }
-};
-
+    try {
+      await deleteDoc(doc(db, "user_admin", user.uid));
+      alert("Account data deleted from Firestore.");
+      window.location.href = "/"; // or redirect to login
+    } catch (error) {
+      console.error("Error deleting Firestore document:", error);
+      alert("Failed to delete your account data.");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#f7f7f9] flex flex-col items-center p-8">
@@ -103,11 +104,12 @@ const handleDeleteAccount = async () => {
       <div className="bg-white rounded-3xl shadow-lg p-8 w-full max-w-3xl flex flex-col items-center">
         {/* Avatar + Name */}
         <Image
-          src="/image1.jpg"
+          src={userData.dp_url || "/default-avatar.png"}
           width={100}
           height={100}
           alt="Profile Avatar"
           className="rounded-full mb-4 border-4 border-indigo-500"
+          priority
         />
         <h1 className="text-3xl font-semibold text-center text-gray-900">
           {userData.full_name}
@@ -169,26 +171,24 @@ const handleDeleteAccount = async () => {
           <p className="text-sm font-semibold text-gray-700 mb-4">Actions</p>
           <ul className="space-y-4">
             <li
-  onClick={handleChangePassword}
-  className="flex justify-between items-center cursor-pointer hover:text-blue-700 transition-all"
->
-  <span className="flex items-center gap-2">
-    <RiLockPasswordLine className="text-blue-600" /> Change Password
-  </span>
-  <span className="text-xl">&rarr;</span>
-</li>
+              onClick={handleChangePassword}
+              className="flex justify-between items-center cursor-pointer hover:text-blue-700 transition-all"
+            >
+              <span className="flex items-center gap-2">
+                <RiLockPasswordLine className="text-blue-600" /> Change Password
+              </span>
+              <span className="text-xl">&rarr;</span>
+            </li>
 
-<li
-  onClick={handleDeleteAccount}
-  className="flex justify-between items-center text-rose-500 cursor-pointer hover:text-red-600 transition-all"
->
-  <span className="flex items-center gap-2">
-    <MdDelete className="text-rose-600" /> Delete Account
-  </span>
-  <span className="text-xl">&rarr;</span>
-</li>
-
-
+            <li
+              onClick={handleDeleteAccount}
+              className="flex justify-between items-center text-rose-500 cursor-pointer hover:text-red-600 transition-all"
+            >
+              <span className="flex items-center gap-2">
+                <MdDelete className="text-rose-600" /> Delete Account
+              </span>
+              <span className="text-xl">&rarr;</span>
+            </li>
           </ul>
         </div>
       </div>
