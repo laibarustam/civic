@@ -21,7 +21,14 @@ import { createUserWithEmailAndPassword } from "firebase/auth";
 import { FaImage } from "react-icons/fa";
 import { storage } from "/firebase";
 import { auth, db } from "/firebase";
-import { doc, setDoc } from "firebase/firestore";
+import {
+  doc,
+  setDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+} from "firebase/firestore";
 
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 
@@ -52,12 +59,23 @@ export default function Home() {
     "Transportation",
     "Emergency Services",
   ];
-
   const onSubmit = async (data) => {
     setIsSubmitting(true);
 
     try {
-      // Create user in Firebase Auth
+      // Check if CNIC already exists
+      const cnicQuery = query(
+        collection(db, "user_admin"),
+        where("cnic", "==", data.cnic)
+      );
+      const cnicDocs = await getDocs(cnicQuery);
+      if (!cnicDocs.empty) {
+        setError("cnic", { message: "This CNIC is already registered" });
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Email uniqueness is handled by Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         data.email,
@@ -128,13 +146,29 @@ export default function Home() {
       setIsSubmitting(false);
     }
   };
+  // Function to check if user is at least 18 years old based on CNIC
+  const validateAge = (cnic) => {
+    const currentYear = new Date().getFullYear();
+    const birthYear = parseInt("19" + cnic.substr(4, 2)); // Assuming year format in CNIC is YY
+    return currentYear - birthYear >= 18;
+  };
 
   // Handle image selection
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Validate file type
+      if (!["image/jpeg", "image/png", "image/jpg"].includes(file.type)) {
+        alert("Please upload only JPG or PNG images");
+        return;
+      }
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Image size should not exceed 5MB");
+        return;
+      }
       setImage(file);
-      setImageURL(URL.createObjectURL(file)); // Display the selected image
+      setImageURL(URL.createObjectURL(file));
     }
   };
 
@@ -275,6 +309,11 @@ export default function Home() {
                         placeholder="Phone Number"
                         {...register("phone", {
                           required: "Phone number is required",
+                          pattern: {
+                            value: /^(\+92|0)?3[0-9]{2}[0-9]{7}$/,
+                            message:
+                              "Enter valid Pakistani phone number (e.g., 03001234567 or +923001234567)",
+                          },
                         })}
                         className="w-full border-none outline-none bg-transparent text-sm text-black"
                       />
@@ -300,6 +339,18 @@ export default function Home() {
                           pattern: {
                             value: /^\d{5}-\d{7}-\d{1}$/,
                             message: "CNIC must be in format: 00000-0000000-0",
+                          },
+                          validate: {
+                            validAge: (value) =>
+                              validateAge(value.replace(/-/g, "")) ||
+                              "You must be at least 18 years old to register",
+                            validChecksum: (value) => {
+                              const cleanCnic = value.replace(/-/g, "");
+                              return (
+                                /^\d{13}$/.test(cleanCnic) ||
+                                "Invalid CNIC number"
+                              );
+                            },
                           },
                         })}
                         className="w-full border-none outline-none bg-transparent text-sm text-black"
@@ -429,8 +480,14 @@ export default function Home() {
                         {...register("password", {
                           required: "Password is required",
                           minLength: {
-                            value: 6,
-                            message: "Password must be at least 6 characters",
+                            value: 8,
+                            message: "Password must be at least 8 characters",
+                          },
+                          pattern: {
+                            value:
+                              /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+                            message:
+                              "Password must contain at least one uppercase letter, one lowercase letter, one number and one special character",
                           },
                         })}
                         className="w-full border-none outline-none bg-transparent text-sm text-black"
