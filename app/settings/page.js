@@ -76,7 +76,7 @@ export default function SettingsPage() {
               <input
                 type="text"
                 name="name"
-                value={formData.name}
+                value={formData.full_name}
                 onChange={handleChange}
                 className="w-full border-none outline-none bg-transparent text-sm text-gray-600 py-2 focus:ring-0"
                 placeholder="Enter your name"

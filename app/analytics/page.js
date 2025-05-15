@@ -8,6 +8,7 @@ import ReportsGraph from "../components/ReportsGraph";
 import {
   FaChartBar,
   FaCheckCircle,
+  FaExclamationCircle,
   FaExclamationTriangle,
   FaUsers,
 } from "react-icons/fa";
@@ -100,8 +101,8 @@ export default function Analytics() {
           <h3 className="text-lg font-bold">Pending Reports</h3>
           <p className="text-3xl font-semibold mt-2">{reportCounts.pending}</p>
         </div>
-        <div className="bg-orange-200 p-6 rounded text-black flex items-center justify-center flex-col hover:bg-orange-300 hover:shadow-xl transform hover:scale-105 transition-all duration-300">
-          <FaExclamationTriangle className="text-4xl mb-4" />
+        <div className="bg-red-200 p-6 rounded text-black flex items-center justify-center flex-col hover:bg-red-300 hover:shadow-xl transform hover:scale-105 transition-all duration-300">
+          <FaExclamationCircle className="text-4xl mb-4" />
           <h3 className="text-lg font-bold">Rejected Reports</h3>
           <p className="text-3xl font-semibold mt-2">{reportCounts.rejected}</p>
         </div>
@@ -119,10 +120,6 @@ export default function Analytics() {
         <AnalyticsChart data={reportCounts} />
         <div className="flex justify-center mt-4 space-x-4 text-sm">
           {" "}
-          <div className="flex items-center">
-            <span className="w-3 h-3 bg-orange-400 rounded-full mr-2" />{" "}
-            <span className="text-black">Total</span>
-          </div>
           <div className="flex items-center">
             <span className="w-3 h-3 bg-blue-500 rounded-full mr-2" />{" "}
             <span className="text-black">Solved</span>
@@ -149,7 +146,6 @@ export default function Analytics() {
                 <th className="p-3 border-x text-center">Name</th>
                 <th className="p-3 border-x text-center">Email</th>
                 <th className="p-3 border-x text-center">Role</th>
-                <th className="p-3 border-x text-center">Location</th>
               </tr>
             </thead>
             <tbody>
@@ -180,15 +176,6 @@ export default function Analytics() {
                     <td className="p-3 border-x text-center">{user.email}</td>
                     <td className="p-3 border-x text-center">
                       {user.role || "N/A"}
-                    </td>
-                    <td className="p-3 border-x text-center">
-                      {user.locations
-                        ? typeof user.locations === "object"
-                          ? `${user.locations.latitude || "N/A"}, ${
-                              user.locations.longitude || "N/A"
-                            }`
-                          : user.locations
-                        : "N/A"}
                     </td>
                   </tr>
                 ))

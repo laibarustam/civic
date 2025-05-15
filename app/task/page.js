@@ -59,13 +59,16 @@ export default function TaskPage() {
     }
   };
   // Filter reports based on search query
-  const filteredReports = allReports.filter(
-    (report) =>
-      report.id.toLowerCase().includes(allReportsSearchQuery.toLowerCase()) ||
-      (report.title || "")
-        .toLowerCase()
-        .includes(allReportsSearchQuery.toLowerCase())
+ const filteredReports = allReports.filter((report) => {
+  const query = allReportsSearchQuery.toLowerCase();
+
+  return (
+    report.id?.toLowerCase().includes(query) ||
+    (report.title || "").toLowerCase().includes(query) ||
+    report.reportCode?.toString().toLowerCase().includes(query)
   );
+});
+
 
   // Get current reports for pagination using filtered reports
   const indexOfLastReport = reportsCurrentPage * reportsPerPage;
@@ -174,27 +177,36 @@ export default function TaskPage() {
   }, []);
 
   const handleAssign = async () => {
-    if (!selectedReport || !department)
-      return alert("Please select a report and department.");
-    await updateDoc(doc(db, "reports", selectedReport.id), {
-      assigned_to: department,
-      instruction,
-      status: status,
-    });
-    await setDoc(doc(db, "assigned_reports", selectedReport.id), {
-      ...selectedReport,
-      assigned_to: department,
-      instruction,
-      status: status,
-      assignedAt: new Date(),
-    });
-    alert("Task assigned!");
-    setShowAssignModal(false);
-    setSelectedReport(null);
-    setDepartment("");
-    setInstruction("");
-    setStatus("In Progress");
-  };
+  if (!selectedReport || !department) {
+    return alert("Please select a report and department.");
+  }
+
+  if (!instruction.trim()) {
+    return alert("Please write an instruction before assigning the task.");
+  }
+
+  const updatedStatus = "In Progress";
+
+  await updateDoc(doc(db, "reports", selectedReport.id), {
+    assigned_to: department,
+    instruction,
+    status: updatedStatus,
+  });
+
+  await setDoc(doc(db, "assigned_reports", selectedReport.id), {
+    ...selectedReport,
+    assigned_to: department,
+    instruction,
+    status: updatedStatus,
+    assignedAt: new Date(),
+  });
+
+  alert("Task assigned!");
+  setShowAssignModal(false);
+  setSelectedReport(null);
+  setDepartment("");
+  setInstruction("");
+};
 
   const handleMarkDone = async (task) => {
     await updateDoc(doc(db, "reports", task.id), { status: "solved" });
@@ -295,6 +307,7 @@ export default function TaskPage() {
           <table className="min-w-full border text-sm bg-white shadow rounded text-black">
             <thead>
               <tr className="bg-gray-100">
+                <th className="border p-2">Report Count</th>
                 <th className="border p-2">Report ID</th>
                 <th className="border p-2">Issue Type</th>
                 <th className="border p-2">Location</th>
@@ -306,7 +319,8 @@ export default function TaskPage() {
             <tbody className="text-black">
               {pendingReports.map((report) => (
                 <tr key={report.id}>
-                  <td className="border p-2 font-bold">{report.id}</td>
+                  <td className="border p-2 font-bold">{report.reportCode || "N/A"}</td>
+                  <td className="border p-2">{report.id}</td>
                   <td className="border p-2">{report.category}</td>
                   <td className="border p-2">{report.location}</td>
                   <td className="border p-2">{report.date}</td>
@@ -346,6 +360,7 @@ export default function TaskPage() {
               value={selectedReport.category}
               readOnly
             />
+            
             <input
               className="w-full border p-2 rounded text-black"
               value={selectedReport.location}
@@ -384,62 +399,52 @@ export default function TaskPage() {
             />
           </>
         )}
-      {showEditModal &&
-        renderModal(
-          "Edit Task",
-          "Update Task",
-          handleUpdateTask,
-          () => setShowEditModal(false),
-          <>
-            {" "}
-            <input
-              className="w-full border p-2 rounded text-black"
-              value={selectedTask.id}
-              readOnly
-            />
-            <input
-              className="w-full border p-2 rounded text-black"
-              value={selectedTask.category}
-              readOnly
-            />
-            <input
-              className="w-full border p-2 rounded text-black"
-              value={selectedTask.location}
-              readOnly
-            />
-            <select
-              className="w-full border p-2 rounded text-black"
-              value={department}
-              onChange={(e) => setDepartment(e.target.value)}
-            >
-              <option value="">Select Department</option>
-              <option>Municipal Corporation</option>
-              <option>Police Department</option>
-              <option>Fire & Emergency Services</option>
-              <option>Electricity & Gas Departments</option>
-              <option>Public Works Department (PWD)</option>
-            </select>
-            <div className="mb-2">
-              <label className="block text-sm font-medium mb-1">Status</label>
-              <select
-                className="w-full border p-2 rounded text-black"
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-              >
-                <option value="pending">Pending</option>
-                <option value="solved">Solved</option>
-                <option value="rejected">Rejected</option>
-              </select>
-            </div>
-            <input
-              type="text"
-              className="w-full border p-2 rounded text-black"
-              placeholder="Instruction"
-              value={instruction}
-              onChange={(e) => setInstruction(e.target.value)}
-            />
-          </>
-        )}
+      {showAssignModal &&
+  renderModal(
+    "Assign Task",
+    "Assign Task",
+    handleAssign,
+    () => setShowAssignModal(false),
+    <>
+      <input
+        className="w-full border p-2 rounded text-black"
+        value={selectedReport.id}
+        readOnly
+      />
+      <input
+        className="w-full border p-2 rounded text-black"
+        value={selectedReport.category}
+        readOnly
+      />
+      <input
+        className="w-full border p-2 rounded text-black"
+        value={selectedReport.location}
+        readOnly
+      />
+
+      <select
+        className="w-full border p-2 rounded text-black"
+        value={department}
+        onChange={(e) => setDepartment(e.target.value)}
+      >
+        <option value="">Select Department</option>
+        <option>Municipal Corporation</option>
+        <option>Police Department</option>
+        <option>Fire & Emergency Services</option>
+        <option>Electricity & Gas Departments</option>
+        <option>Public Works Department (PWD)</option>
+      </select>
+
+      <textarea
+        className="w-full border p-2 rounded text-black"
+        placeholder="Enter Instructions"
+        value={instruction}
+        onChange={(e) => setInstruction(e.target.value)}
+      />
+    </>
+  )
+}
+
       {showDeleteModal &&
         renderModal(
           "Confirm Deletion",
@@ -460,6 +465,7 @@ export default function TaskPage() {
           <table className="min-w-full border text-sm bg-white shadow rounded">
             <thead>
               <tr className="bg-gray-100">
+                <th className="border p-2">Report Count</th>
                 <th className="border p-2">Report ID</th>
                 <th className="border p-2">Issue Type</th>
                 <th className="border p-2">Location</th>
@@ -471,6 +477,7 @@ export default function TaskPage() {
             <tbody>
               {taskHistory.map((task) => (
                 <tr key={task.id}>
+                  <td className="border p-2 font-bold">{task.Code || "N/A"}</td>
                   <td className="border p-2">{task.id}</td>
                   <td className="border p-2">{task.category}</td>
                   <td className="border p-2">{task.location}</td>
@@ -516,7 +523,7 @@ export default function TaskPage() {
             {" "}
             <input
               type="text"
-              placeholder="Search by Report ID or Title..."
+              placeholder="Search by Report Code, ID, or Title..."
               value={allReportsSearchQuery}
               onChange={(e) => setAllReportsSearchQuery(e.target.value)}
               className="w-full px-4 py-2 rounded-lg text-gray-700 focus:outline-none"
@@ -542,6 +549,7 @@ export default function TaskPage() {
           <table className="min-w-full border text-sm bg-white shadow rounded">
             <thead>
               <tr className="bg-gray-100">
+                <th className="border p-2">Report Count</th>
                 <th className="border p-2">Report ID</th>
                 <th className="border p-2">Reporter's Name</th>
                 <th className="border p-2">Title</th>
@@ -573,6 +581,7 @@ export default function TaskPage() {
               ) : (
                 currentReports.map((report, index) => (
                   <tr key={report.id} className="border-t hover:bg-gray-50">
+                    <td className="px-4 py-2 border">{report.reportCode || "N/A"}</td>
                     <td className="border p-2">{report.id}</td>
                     <td className="border p-2">
                       {report.reporterName || "N/A"}

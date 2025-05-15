@@ -121,11 +121,7 @@ export default function Home() {
           Civic Connect - Admin Panel
         </h2>
         <div className="flex items-center gap-4 mb-10">
-          <img
-            src={userData.image || "/default-profile.jpg"}
-            alt="User Profile"
-            className="w-16 h-16 rounded-full object-cover"
-          />
+          
 
           <div className="text-gray-800">
             <p className="text-lg font-semibold">
@@ -175,6 +171,7 @@ export default function Home() {
             <thead className="bg-gray-100">
               <tr>
                 {[
+                  "Report Code", 
                   "Report ID",
                   "Issue Type",
                   "Location",
@@ -193,6 +190,7 @@ export default function Home() {
                 const task = getTaskForReport(report.id);
                 return (
                   <tr key={report.id} className="border-t">
+                    <td className="px-4 py-2 border">{report.reportCode || "N/A"}</td>
                     <td className="px-4 py-2 border">{report.id}</td>
                     <td className="px-4 py-2 border">
                       {report.category || "N/A"}

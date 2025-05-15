@@ -16,22 +16,27 @@ export default function RootLayout({ children }) {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser);
       setLoading(false);
 
-      if (!user && !isPublicPage) {
-        router.push("/login");
+      // If not logged in and not on a public page
+      if (!firebaseUser && !publicPages.includes(pathname)) {
+        router.replace("/login");
       }
 
-      if (user && isPublicPage && pathname !== "/") {
-        router.push("/dashboard");
-      }
+      // If logged in and on public page (not home), redirect to dashboard
+      if (firebaseUser && firebaseUser.emailVerified && isPublicPage && pathname !== "/") {
+  router.replace("/dashboard");
+}
+
+      
     });
 
     return () => unsubscribe();
-  }, [pathname, isPublicPage]);
+  }, [pathname]);
 
+  // Show loading spinner while checking auth status
   if (loading) {
     return (
       <html lang="en">
@@ -42,6 +47,11 @@ export default function RootLayout({ children }) {
         </body>
       </html>
     );
+  }
+
+  // Prevent rendering protected pages if user is not authenticated
+  if (!user && !isPublicPage) {
+    return null;
   }
 
   return (

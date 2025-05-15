@@ -1,7 +1,10 @@
 "use client";
+import React, { useState, useEffect } from "react";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { auth, db } from "@/firebase"; // make sure you import auth and db!
+import { doc, getDoc } from "firebase/firestore";
 import {
   FaTachometerAlt,
   FaTasks,
@@ -12,13 +15,6 @@ import {
   FaSignOutAlt,
 } from "react-icons/fa";
 
-const topLinks = [
-  { href: "/dashboard", label: "Dashboard", icon: <FaTachometerAlt /> },
-  { href: "/task", label: "Task", icon: <FaTasks /> },
-  { href: "/analytics", label: "Analytics", icon: <FaChartLine /> },
-  { href: "/users", label: "Users", icon: <FaUsers /> },
-];
-
 const bottomLinks = [
   { href: "/profile", label: "Profile", icon: <FaUserAlt /> },
   { href: "/settings", label: "Settings", icon: <FaCog /> },
@@ -27,10 +23,42 @@ const bottomLinks = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const [role, setRole] = useState("");
+
+  useEffect(() => {
+    const fetchRole = async () => {
+      const user = auth.currentUser;
+      if (user) {
+        const docRef = doc(db, "user_admin", user.uid);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setRole(docSnap.data().role);
+        }
+      }
+    };
+    fetchRole();
+  }, []);
+
+  let topLinks = [
+    { href: "/dashboard", label: "Dashboard", icon: <FaTachometerAlt /> },
+    { href: "/analytics", label: "Analytics", icon: <FaChartLine /> },
+    { href: "/users", label: "Users", icon: <FaUsers /> },
+  ];
+
+  if (role === "admin") {
+    topLinks.push({ href: "/task", label: "Task", icon: <FaTasks /> });
+  }
+
+  if (role === "officer") {
+    topLinks.push({
+      href: "/OfficerTasksPage",
+      label: "Officer Tasks",
+      icon: <FaTasks />,
+    });
+  }
+
   const isAuthPage =
-    pathname === "/login" ||
-    pathname === "/app" ||
-    pathname === "/forgetpassword";
+    pathname === "/login" || pathname === "/app" || pathname === "/forgetpassword";
 
   if (isAuthPage) return null;
 
@@ -39,11 +67,7 @@ export default function Sidebar() {
       {/* Top Section */}
       <div>
         <div className="flex flex-col items-center mb-8">
-          <img
-            src="/logo.png"
-            alt="CivicConnect Logo"
-            className="w-40 h-auto"
-          />
+          <img src="/logo.png" alt="CivicConnect Logo" className="w-40 h-auto" />
         </div>
         <nav className="flex flex-col gap-3">
           {topLinks.map((link) => (
